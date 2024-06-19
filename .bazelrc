@@ -1,0 +1,5 @@
+# Enable Bzlmod for every Bazel command
+common --enable_bzlmod
+common --registry=https://bcr.bazel.build/
+
+common --repo_env="BAZEL_CXXOPTS=-std=c++17"

@@ -1,0 +1,25 @@
+#pragma once
+
+#include <type_traits>
+
+#include "cordo/impl/literal.hh"
+
+namespace cordo {
+
+template <typename S, typename T>
+struct field_t final {
+  static_assert(!std::is_reference_v<T>);
+
+  using tuple_t = S;
+  using value_t = T;
+  T S::*field_;
+};
+
+inline constexpr struct {
+  template <typename S, typename T>
+  constexpr field_t<S, T> operator()(T S::*field_) const noexcept {
+    return {field_};
+  }
+} field_{};
+
+}  // namespace cordo
