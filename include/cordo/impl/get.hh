@@ -3,12 +3,11 @@
 #include <functional>
 #include <utility>
 
-#include "composed.hh"
 #include "cordo/impl/composed.hh"
 #include "cordo/impl/field.hh"
+#include "cordo/impl/kv.hh"
 #include "cordo/impl/named.hh"
 #include "cordo/impl/property.hh"
-#include "cordo/impl/value.hh"
 
 namespace cordo {
 
@@ -31,18 +30,20 @@ struct erased_t final {
 inline constexpr struct {
   // field_t
   template <typename S, typename T>
-  constexpr T& operator()(S& s, ::cordo::field_t<S, T> f) const noexcept {
+  constexpr T& operator()(
+      S& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
     return s.*(f.field_);
   }
 
   template <typename S, typename T>
-  constexpr T&& operator()(S&& s, ::cordo::field_t<S, T> f) const noexcept {
+  constexpr T&& operator()(
+      S&& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
     return ((S&&)s).*(f.field_);
   }
 
   template <typename S, typename T>
-  constexpr const T& operator()(const S& s,
-                                ::cordo::field_t<S, T> f) const noexcept {
+  constexpr const T& operator()(
+      const S& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
     return s.*(f.field_);
   }
 
@@ -73,8 +74,8 @@ inline constexpr struct {
 
   // named_t
   template <typename S, auto N, typename A>
-  constexpr decltype(auto) operator()(S&& s,
-                                      ::cordo::named_t<N, A> f) const noexcept {
+  constexpr decltype(auto) operator()(
+      S&& s, ::cordo_internal_named::named_t<N, A> f) const noexcept {
     return (*this)(std::forward<S>(s), f.accessor_);
   }
 

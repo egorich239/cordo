@@ -16,10 +16,9 @@ struct Baz {
 
 int main(int argc, const char** argv) {
   using namespace ::cordo::literals;
-  std::cout << "foo"_t() << "\n";
 
-  constexpr auto acc = cordo::field_(&Foo::x);
-  constexpr auto x_field = cordo::named_("x"_t, cordo::field_(&Foo::x));
+  constexpr auto acc = cordo::field(&Foo::x);
+  constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
 
   Foo a{.x = 3};
   std::cout << a.x << "\n";
@@ -32,9 +31,11 @@ int main(int argc, const char** argv) {
   const Foo b = a;
   std::cout << cordo::get(b, acc) << "\n";
 
+#if 0
   cordo::named_tuple_t<Foo, x_field> desc{};
   cordo::get(a, desc["x"_t]) = 12;
   std::cout << cordo::get(a, acc) << "\n";
+#endif
 
   constexpr auto prop_random = cordo::property_(&Foo::random);
   std::cout << cordo::get(a, prop_random) << "\n";
@@ -49,7 +50,7 @@ int main(int argc, const char** argv) {
             << cordo::get.as<float>(a, erased_x) << "\n";
 
   constexpr auto composed_z =
-      cordo::compose_(cordo::field_(&Baz::l), cordo::field_(&Foo::x));
+      cordo::compose_(cordo::field(&Baz::l), cordo::field(&Foo::x));
   Baz baz{};
   cordo::get(baz, composed_z) = 7;
   std::cout << cordo::get((const Baz&)baz, composed_z) << "\n";
@@ -59,6 +60,8 @@ int main(int argc, const char** argv) {
 
   auto sss = ("foo"_key = 16);
   std::cout << sss.key()() << " " << sss.value() << "\n";
+
+  std::cout << (cordo::get2(a, acc) = 89) << "\n";
 
   return 0;
 }

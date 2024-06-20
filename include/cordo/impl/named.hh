@@ -1,24 +1,24 @@
 #pragma once
 
-#include "cordo/impl/literal.hh"
+#include "cordo/impl/accessor.hh"
+#include "cordo/impl/kv.hh"
 
-namespace cordo {
-
-template <::cordo::literal_t N, typename A>
+namespace cordo_internal_named {
+template <::cordo::key_t N, ::cordo::accessor A>
 struct named_t final {
   using tuple_t = typename A::tuple_t;
   using value_t = typename A::value_t;
-  using name_t = decltype(N);
 
-  constexpr name_t name() const noexcept { return name_t{}; }
+  constexpr decltype(auto) name() const noexcept { return N(); }
   A accessor_;
 };
+}  // namespace cordo_internal_named
 
+namespace cordo {
 inline constexpr struct {
-  template <typename L, typename A>
-  constexpr decltype(auto) operator()(L, A accessor) const noexcept {
-    return named_t<L{}, A>{accessor};
+  template <auto K, accessor A>
+  constexpr decltype(auto) operator()(key_t<K>, A accessor) const noexcept {
+    return ::cordo_internal_named::named_t<key_t<K>{}, A>{accessor};
   }
-} named_{};
-
+} named{};
 }  // namespace cordo

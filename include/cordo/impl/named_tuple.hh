@@ -6,7 +6,7 @@
 #include "cordo/impl/named.hh"
 
 namespace cordo {
-
+#if 0
 template <typename S, named_t... Fields>
 struct named_tuple_t final {
   static_assert((std::is_same_v<typename decltype(Fields)::tuple_t, S> && ...));
@@ -34,5 +34,5 @@ struct named_tuple_t final {
     return this->resolve(n, t...);
   }
 };
-
+#endif
 }  // namespace cordo
