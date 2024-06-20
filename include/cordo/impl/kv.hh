@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "cordo/impl/literal.hh"
+#include "cordo/impl/value.hh"
 
 namespace cordo {
 namespace cordo_kv_internal {
@@ -24,7 +25,7 @@ struct key_t final {
   }
 };
 
-}  // namespace cordo_cv_internal
+}  // namespace cordo_kv_internal
 
 template <auto K>
 using key_t = typename ::cordo::cordo_kv_internal::key_t<K>;
@@ -37,7 +38,7 @@ constexpr decltype(auto) operator""_key() noexcept
 {
   constexpr ::std::size_t VALUE =
       ::cordo::cordo_literal_internal::parse_index<C...>().value;
-  return ::cordo::key_t<std::integral_constant<::std::size_t, VALUE>{}>{};
+  return ::cordo::key_t<::cordo::value_t<VALUE>{}>{};
 }
 
 template <::cordo::cordo_literal_internal::literal_value_t L>

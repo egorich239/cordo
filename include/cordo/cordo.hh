@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cordo/impl/accessor.hh"
 #include "cordo/impl/composed.hh"
 #include "cordo/impl/field.hh"
 #include "cordo/impl/get.hh"

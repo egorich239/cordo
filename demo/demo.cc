@@ -55,7 +55,7 @@ int main(int argc, const char** argv) {
   std::cout << cordo::get((const Baz&)baz, composed_z) << "\n";
 
   auto ppp = (123_key = 15);
-  std::cout << ppp.key() << " " << ppp.value() << "\n";
+  std::cout << ppp.key()() << " " << ppp.value() << "\n";
 
   auto sss = ("foo"_key = 16);
   std::cout << sss.key()() << " " << sss.value() << "\n";
