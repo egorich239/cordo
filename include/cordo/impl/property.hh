@@ -4,8 +4,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace cordo {
-namespace cordo_property_internal {
+namespace cordo_internal_property {
 template <typename F, typename S, typename T>
 concept property_mut = requires(const F& f, S& s) {
   { std::invoke(f, s) } -> std::same_as<T&>;
@@ -20,11 +19,9 @@ template <typename F, typename S, typename T>
 concept property_mut_or_const =
     property_const<F, S, T> || property_mut<F, S, T> ||
     property_mut<F, S, const T>;
-}  // namespace cordo_property_internal
 
-template <typename S, typename T,
-          ::cordo::cordo_property_internal::property_mut_or_const<S, T> Mut,
-          ::cordo::cordo_property_internal::property_const<S, T> Const>
+template <typename S, typename T, property_mut_or_const<S, T> Mut,
+          property_const<S, T> Const>
 struct property_t final {
   using tuple_t = S;
   using value_t = T;
@@ -33,12 +30,17 @@ struct property_t final {
   Const const_;
 };
 
+}  // namespace cordo_internal_property
+
+namespace cordo {
+
 inline constexpr struct {
   template <typename S, typename T,
-            ::cordo::cordo_property_internal::property_mut<S, T> Mut,
-            ::cordo::cordo_property_internal::property_const<S, T> Const>
+            ::cordo_internal_property::property_mut<S, T> Mut,
+            ::cordo_internal_property::property_const<S, T> Const>
   constexpr decltype(auto) operator()(Const const_, Mut mut_) const noexcept {
-    return property_t<S, T, Mut, Const>{mut_, const_};
+    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
+                                                                   const_};
   }
 
   template <typename S, typename T>
@@ -46,7 +48,8 @@ inline constexpr struct {
                                       T& (S::*mut_)()) const noexcept {
     using Mut = T& (S::*)();
     using Const = const T& (S::*)() const;
-    return property_t<S, T, Mut, Const>{mut_, const_};
+    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
+                                                                   const_};
   }
 
   template <typename S, typename T>
@@ -54,21 +57,47 @@ inline constexpr struct {
                                       T& (S::*mut_)()) const noexcept {
     using Mut = T& (S::*)();
     using Const = T (S::*)() const;
-    return property_t<S, T, Mut, Const>{mut_, const_};
+    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
+                                                                   const_};
   }
 
   template <typename S, typename T,
-            ::cordo::cordo_property_internal::property_const<S, T> Const>
+            ::cordo_internal_property::property_const<S, T> Const>
   constexpr decltype(auto) operator()(Const const_) const noexcept {
-    return property_t<S, const T, Const, Const>{const_, const_};
+    return ::cordo_internal_property::property_t<S, const T, Const, Const>{
+        const_, const_};
   }
 
   template <typename S, typename T>
   constexpr decltype(auto) operator()(T (S::*const_)() const) const noexcept {
     using Const = T (S::*)() const;
-    return property_t<S, const std::remove_cvref_t<T>, Const, Const>{const_,
-                                                                     const_};
+    return ::cordo_internal_property::property_t<
+        S, const std::remove_cvref_t<T>, Const, Const>{const_, const_};
   }
-} property_{};
+} property{};
+
+template <typename S, typename T,
+          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
+          ::cordo_internal_property::property_const<S, T> Const>
+auto cordo_algo(
+    const algo_t<get2_t{}>&, adl_hook_t,
+    const typename ::cordo_internal_property::property_t<S, T, Mut,
+                                                         Const>::tuple_t& s,
+    ::cordo_internal_property::property_t<S, T, Mut, Const> p) noexcept
+    -> decltype(std::invoke(p.const_, s)) {
+  return std::invoke(p.const_, s);
+}
+
+template <typename S, typename T,
+          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
+          ::cordo_internal_property::property_const<S, T> Const>
+auto cordo_algo(
+    const algo_t<get2_t{}>&, adl_hook_t,
+    typename ::cordo_internal_property::property_t<S, T, Mut, Const>::tuple_t&
+        s,
+    ::cordo_internal_property::property_t<S, T, Mut, Const> p) noexcept
+    -> decltype(std::invoke(p.mut_, s)) {
+  return std::invoke(p.mut_, s);
+}
 
 }  // namespace cordo

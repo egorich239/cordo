@@ -22,14 +22,13 @@ int main(int argc, const char** argv) {
 
   Foo a{.x = 3};
   std::cout << a.x << "\n";
-  cordo::get(a, acc) = 5;
+  cordo::get2(a, acc) = 5;
   std::cout << a.x << "\n";
-  cordo::get(a, x_field) = 13;
+  cordo::get2(a, x_field) = 13;
   std::cout << a.x << "\n";
 
-  std::cout << cordo::get(Foo{.x = 6}, acc) << "\n";
   const Foo b = a;
-  std::cout << cordo::get(b, acc) << "\n";
+  std::cout << cordo::get2(b, acc) << "\n";
 
 #if 0
   cordo::named_tuple_t<Foo, x_field> desc{};
@@ -37,23 +36,23 @@ int main(int argc, const char** argv) {
   std::cout << cordo::get(a, acc) << "\n";
 #endif
 
-  constexpr auto prop_random = cordo::property_(&Foo::random);
-  std::cout << cordo::get(a, prop_random) << "\n";
-  constexpr auto prop_x_const = cordo::property_(&Foo::x_const);
-  std::cout << cordo::get(a, prop_x_const) << "\n";
-  constexpr auto prop_x = cordo::property_(&Foo::x_const, &Foo::x_mut);
-  cordo::get(a, prop_x) = 16;
-  std::cout << cordo::get((const Foo&)a, prop_x) << "\n";
+  constexpr auto prop_random = cordo::property(&Foo::random);
+  std::cout << cordo::get2(a, prop_random) << "\n";
+  constexpr auto prop_x_const = cordo::property(&Foo::x_const);
+  std::cout << cordo::get2(a, prop_x_const) << "\n";
+  constexpr auto prop_x = cordo::property(&Foo::x_const, &Foo::x_mut);
+  cordo::get2(a, prop_x) = 16;
+  std::cout << cordo::get2((const Foo&)a, prop_x) << "\n";
 
   constexpr auto erased_x = cordo::erased_(cordo::value_t<acc>());
   std::cout << *cordo::get.as<int>(a, erased_x) << " "
             << cordo::get.as<float>(a, erased_x) << "\n";
 
   constexpr auto composed_z =
-      cordo::compose_(cordo::field(&Baz::l), cordo::field(&Foo::x));
+      cordo::compose(cordo::field(&Baz::l), cordo::field(&Foo::x));
   Baz baz{};
-  cordo::get(baz, composed_z) = 7;
-  std::cout << cordo::get((const Baz&)baz, composed_z) << "\n";
+  cordo::get2(baz, composed_z) = 7;
+  std::cout << cordo::get2((const Baz&)baz, composed_z) << "\n";
 
   auto ppp = (123_key = 15);
   std::cout << ppp.key()() << " " << ppp.value() << "\n";

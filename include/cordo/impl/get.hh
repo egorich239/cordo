@@ -3,11 +3,9 @@
 #include <functional>
 #include <utility>
 
-#include "cordo/impl/composed.hh"
-#include "cordo/impl/field.hh"
 #include "cordo/impl/kv.hh"
-#include "cordo/impl/named.hh"
 #include "cordo/impl/property.hh"
+#include "cordo/impl/get2.hh"
 
 namespace cordo {
 
@@ -28,57 +26,6 @@ struct erased_t final {
 };
 
 inline constexpr struct {
-  // field_t
-  template <typename S, typename T>
-  constexpr T& operator()(
-      S& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
-    return s.*(f.field_);
-  }
-
-  template <typename S, typename T>
-  constexpr T&& operator()(
-      S&& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
-    return ((S&&)s).*(f.field_);
-  }
-
-  template <typename S, typename T>
-  constexpr const T& operator()(
-      const S& s, ::cordo_internal_field::field_t<S, T> f) const noexcept {
-    return s.*(f.field_);
-  }
-
-  // property_t
-  template <typename S, typename T, typename M, typename C>
-  constexpr decltype(auto) operator()(
-      S& s, ::cordo::property_t<S, T, M, C> f) const noexcept {
-    return std::invoke(f.mut_, s);
-  }
-  template <typename S, typename T, typename M, typename C>
-  constexpr decltype(auto) operator()(
-      const S& s, ::cordo::property_t<S, T, M, C> f) const noexcept {
-    return std::invoke(f.const_, s);
-  }
-
-  // composed_t
-  template <typename S, typename O, typename I>
-  constexpr decltype(auto) operator()(
-      const S& s, ::cordo::composed_t<O, I> c) const noexcept {
-    return (*this)((*this)(s, c.outer_), c.inner_);
-  }
-
-  template <typename S, typename O, typename I>
-  constexpr decltype(auto) operator()(
-      S& s, ::cordo::composed_t<O, I> c) const noexcept {
-    return (*this)((*this)(s, c.outer_), c.inner_);
-  }
-
-  // named_t
-  template <typename S, auto N, typename A>
-  constexpr decltype(auto) operator()(
-      S&& s, ::cordo_internal_named::named_t<N, A> f) const noexcept {
-    return (*this)(std::forward<S>(s), f.accessor_);
-  }
-
   // erased_t
   template <typename T, typename S>
   constexpr T* as(S& s, ::cordo::erased_t<S> e) const noexcept {
@@ -96,9 +43,9 @@ namespace cordo_get_internal {
 template <typename S, typename A, A a>
 struct get_callback final {
   static void* const_(const S& s) noexcept {
-    return (void*)&::cordo::get(s, a);
+    return (void*)&::cordo::get2(s, a);
   }
-  static void* mut_(S& s) noexcept { return (void*)&::cordo::get(s, a); }
+  static void* mut_(S& s) noexcept { return (void*)&::cordo::get2(s, a); }
 };
 }  // namespace cordo_get_internal
 
