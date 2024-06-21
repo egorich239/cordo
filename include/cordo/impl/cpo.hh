@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include "cordo/impl/macros.hh"
+#include "cordo/impl/meta.hh"
 
 namespace cordo_internal_cpo_core {
 template <const auto &A>
@@ -48,5 +49,7 @@ inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
 namespace cordo_internal_cpo {
 using ::cordo::accessor;
 using ::cordo::cpo_t;
+using ::cordo::tag_t;
+using ::cordo::typeid_t;
 struct adl_tag final {};
 }  // namespace cordo_internal_cpo

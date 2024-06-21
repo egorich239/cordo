@@ -16,7 +16,6 @@ struct Baz {
 
 int main(int argc, const char** argv) {
   using namespace ::cordo::literals;
-  // int x= ::cordo::get2_cpo{};
 
   constexpr auto acc = cordo::field(&Foo::x);
   constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
@@ -47,9 +46,9 @@ int main(int argc, const char** argv) {
   cordo::get2(a, prop_x) = 16;
   std::cout << cordo::get2((const Foo&)a, prop_x) << "\n";
 
-  constexpr auto erased_x = cordo::erased_(cordo::value_t<acc>());
-  std::cout << *cordo::get.as<int>(a, erased_x) << " "
-            << cordo::get.as<float>(a, erased_x) << "\n";
+  constexpr auto erased_x = cordo::erased(cordo::value_t<acc>());
+  std::cout << *cordo::get2.as<int>(a, erased_x) << " "
+            << cordo::get2.as<float>(a, erased_x) << "\n";
 
   constexpr auto composed_z =
       cordo::compose(cordo::field(&Baz::l), cordo::field(&Foo::x));
