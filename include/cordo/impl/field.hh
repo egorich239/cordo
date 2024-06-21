@@ -2,9 +2,10 @@
 
 #include <type_traits>
 
-#include "cordo/impl/algo.hh"
+#include "cordo/impl/cpo.hh"
 #include "cordo/impl/get2.hh"
 #include "cordo/impl/literal.hh"
+#include "cordo/impl/macros.hh"
 
 namespace cordo_internal_field {
 template <typename S, typename T>
@@ -26,17 +27,20 @@ inline constexpr struct {
     return {field_};
   }
 } field{};
-
-template <typename S, typename T>
-decltype(auto) cordo_algo(const algo_t<get2_t{}>&, adl_hook_t, const S& s,
-                          ::cordo_internal_field::field_t<S, T> f) noexcept {
-  return s.*(f.field_);
-}
-
-template <typename S, typename T>
-decltype(auto) cordo_algo(const algo_t<get2_t{}>&, adl_hook_t, S& s,
-                          ::cordo_internal_field::field_t<S, T> f) noexcept {
-  return s.*(f.field_);
-}
-
 }  // namespace cordo
+
+namespace cordo_internal_cpo {
+template <typename S, typename T>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_algo,          //
+    (const ::cordo::get2_cpo&, adl_tag, S& s,
+     ::cordo_internal_field::field_t<S, T> f),  //
+    (s.*(f.field_)));
+
+template <typename S, typename T>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_algo,          //
+    (const ::cordo::get2_cpo&, adl_tag, const S& s,
+     ::cordo_internal_field::field_t<S, T> f),  //
+    (s.*(f.field_)));
+}  // namespace cordo_internal_cpo

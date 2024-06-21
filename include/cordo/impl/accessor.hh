@@ -1,12 +1,10 @@
 #pragma once
 
-#include <string>
 #include <type_traits>
 
 #include "cordo/impl/kv.hh"
 
 namespace cordo {
-
 template <typename A>
 concept erased_accessor = requires {
   requires std::is_default_constructible_v<A>;
@@ -25,5 +23,4 @@ concept accessor = requires {
 
   typename A::value_t;  // TODO: field_t?
 };
-
 }  // namespace cordo

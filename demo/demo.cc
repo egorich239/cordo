@@ -16,6 +16,7 @@ struct Baz {
 
 int main(int argc, const char** argv) {
   using namespace ::cordo::literals;
+  // int x= ::cordo::get2_cpo{};
 
   constexpr auto acc = cordo::field(&Foo::x);
   constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
@@ -63,6 +64,5 @@ int main(int argc, const char** argv) {
   std::cout << sss.key()() << " " << sss.value() << "\n";
 
   std::cout << (cordo::get2(a, acc) = 89) << "\n";
-
   return 0;
 }

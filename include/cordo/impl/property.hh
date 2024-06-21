@@ -4,6 +4,9 @@
 #include <functional>
 #include <type_traits>
 
+#include "cordo/impl/cpo.hh"
+#include "cordo/impl/macros.hh"
+
 namespace cordo_internal_property {
 template <typename F, typename S, typename T>
 concept property_mut = requires(const F& f, S& s) {
@@ -29,7 +32,6 @@ struct property_t final {
   Mut mut_;
   Const const_;
 };
-
 }  // namespace cordo_internal_property
 
 namespace cordo {
@@ -75,29 +77,28 @@ inline constexpr struct {
         S, const std::remove_cvref_t<T>, Const, Const>{const_, const_};
   }
 } property{};
-
-template <typename S, typename T,
-          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
-          ::cordo_internal_property::property_const<S, T> Const>
-auto cordo_algo(
-    const algo_t<get2_t{}>&, adl_hook_t,
-    const typename ::cordo_internal_property::property_t<S, T, Mut,
-                                                         Const>::tuple_t& s,
-    ::cordo_internal_property::property_t<S, T, Mut, Const> p) noexcept
-    -> decltype(std::invoke(p.const_, s)) {
-  return std::invoke(p.const_, s);
-}
-
-template <typename S, typename T,
-          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
-          ::cordo_internal_property::property_const<S, T> Const>
-auto cordo_algo(
-    const algo_t<get2_t{}>&, adl_hook_t,
-    typename ::cordo_internal_property::property_t<S, T, Mut, Const>::tuple_t&
-        s,
-    ::cordo_internal_property::property_t<S, T, Mut, Const> p) noexcept
-    -> decltype(std::invoke(p.mut_, s)) {
-  return std::invoke(p.mut_, s);
-}
-
 }  // namespace cordo
+
+namespace cordo_internal_cpo {
+template <typename S, typename T,
+          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
+          ::cordo_internal_property::property_const<S, T> Const>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_algo,          //
+    (const ::cordo::get2_cpo&, adl_tag,
+     const typename ::cordo_internal_property::property_t<S, T, Mut,
+                                                          Const>::tuple_t& s,
+     ::cordo_internal_property::property_t<S, T, Mut, Const> p),  //
+    (std::invoke(p.const_, s)));
+
+template <typename S, typename T,
+          ::cordo_internal_property::property_mut_or_const<S, T> Mut,
+          ::cordo_internal_property::property_const<S, T> Const>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_algo,          //
+    (const ::cordo::get2_cpo&, adl_tag,
+     typename ::cordo_internal_property::property_t<S, T, Mut, Const>::tuple_t&
+         s,
+     ::cordo_internal_property::property_t<S, T, Mut, Const> p),  //
+    (std::invoke(p.mut_, s)));
+}  // namespace cordo_internal_cpo
