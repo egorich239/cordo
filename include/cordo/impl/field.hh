@@ -32,14 +32,14 @@ inline constexpr struct {
 namespace cordo_internal_cpo {
 template <typename S, typename T>
 CORDO_INTERNAL_LAMBDA_(  //
-    cordo_algo,          //
+    cordo_cpo,           //
     (const ::cordo::get2_cpo&, adl_tag, S& s,
      ::cordo_internal_field::field_t<S, T> f),  //
     (s.*(f.field_)));
 
 template <typename S, typename T>
 CORDO_INTERNAL_LAMBDA_(  //
-    cordo_algo,          //
+    cordo_cpo,           //
     (const ::cordo::get2_cpo&, adl_tag, const S& s,
      ::cordo_internal_field::field_t<S, T> f),  //
     (s.*(f.field_)));

@@ -37,7 +37,7 @@ inline constexpr struct {
 namespace cordo_internal_cpo {
 template <accessor O, accessor I, typename S>
 CORDO_INTERNAL_LAMBDA_(  //
-    cordo_algo,          //
+    cordo_cpo,           //
     (const ::cordo::get2_cpo&, adl_tag, S&& s,
      ::cordo_internal_compose::compose_t<O, I> c),  //
     (::cordo::get2(::cordo::get2((S&&)s, c.outer_), c.inner_)));

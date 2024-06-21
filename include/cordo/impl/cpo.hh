@@ -20,13 +20,13 @@ struct invoke_t final {
   CORDO_INTERNAL_LAMBDA_(  //
       resolve,             //
       (overload_prio_t<3>, const cpo_t<A> &a, Args &&...args) const,
-      (cordo_algo(a, (Args &&)args...)));
+      (cordo_cpo(a, (Args &&)args...)));
 
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
       resolve,             //
       (overload_prio_t<2>, const cpo_t<A> &a, Args &&...args) const,
-      (cordo_algo(a, A.adl_tag(), (Args &&)args...)));
+      (cordo_cpo(a, A.adl_tag(), (Args &&)args...)));
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //,
       resolve,             //
