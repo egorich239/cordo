@@ -12,13 +12,13 @@ struct erased_t final {
   mut_getter_t mut_;
 };
 
-// TODO: this is half-assed implementation, it only reasonably works when get2()
+// TODO: this is half-assed implementation, it only reasonably works when get()
 // returns a reference, and fails grotesquely with value type returns.
 // This should either be detected-and-forbidden, or detected-and-circumvented.
 template <typename S, typename A, A a>
 struct erased_get_t final {
-  static void* const_(const S& s) { return (void*)&::cordo::get2(s, a); }
-  static void* mut_(S& s) { return (void*)&::cordo::get2(s, a); }
+  static void* const_(const S& s) { return (void*)&::cordo::get(s, a); }
+  static void* mut_(S& s) { return (void*)&::cordo::get(s, a); }
 };
 }  // namespace cordo_internal_erased
 

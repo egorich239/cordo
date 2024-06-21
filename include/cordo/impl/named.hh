@@ -2,7 +2,7 @@
 
 #include "cordo/impl/accessor.hh"
 #include "cordo/impl/cpo.hh"
-#include "cordo/impl/get2.hh"
+#include "cordo/impl/get.hh"
 #include "cordo/impl/kv.hh"
 #include "cordo/impl/macros.hh"
 
@@ -30,7 +30,7 @@ namespace cordo_internal_cpo {
 template <::cordo::key_t N, ::cordo::accessor A, typename S>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (const ::cordo::get2_cpo&, adl_tag, S&& s,
+    (const ::cordo::get_cpo&, adl_tag, S&& s,
      ::cordo_internal_named::named_t<N, A> n),  //
-    (::cordo::get2((S&&)s, n.accessor_)));
+    (::cordo::get((S&&)s, n.accessor_)));
 }  // namespace cordo_internal_cpo
