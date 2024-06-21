@@ -9,35 +9,30 @@ namespace cordo_internal_cpo_core {
 template <const auto &A>
 struct cpo_t final {};
 
-template <std::size_t N>
-struct overload_prio_t : overload_prio_t<N - 1> {};
-template <>
-struct overload_prio_t<0> {};
-
 struct invoke_t final {
  private:
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
       resolve,             //
-      (overload_prio_t<3>, const cpo_t<A> &a, Args &&...args) const,
+      (::cordo::overload_prio_t<3>, const cpo_t<A> &a, Args &&...args) const,
       (cordo_cpo(a, (Args &&)args...)));
 
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
       resolve,             //
-      (overload_prio_t<2>, const cpo_t<A> &a, Args &&...args) const,
+      (::cordo::overload_prio_t<2>, const cpo_t<A> &a, Args &&...args) const,
       (cordo_cpo(a, A.adl_tag(), (Args &&)args...)));
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //,
       resolve,             //
-      (overload_prio_t<1>, const cpo_t<A> &, Args &&...args) const,
+      (::cordo::overload_prio_t<1>, const cpo_t<A> &, Args &&...args) const,
       (A((Args &&)args...)));
 
  public:
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
       operator(), (const cpo_t<A> &a, Args &&...args) const,
-      (this->resolve(overload_prio_t<4>{}, a, (Args &&)args...)));
+      (this->resolve(::cordo::overload_prio_t<4>{}, a, (Args &&)args...)));
 };
 }  // namespace cordo_internal_cpo_core
 

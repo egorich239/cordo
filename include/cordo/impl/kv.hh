@@ -7,25 +7,29 @@
 
 namespace cordo_internal_kv {
 template <auto K>
+struct key_t;
+
+template <key_t K, typename V>
+struct kv_t final {
+  using value_t = V;
+  constexpr auto key() const noexcept { return K; }
+  constexpr const V& value() const noexcept { return value_; }
+  V value_;
+};
+
+template <auto K>
 struct key_t final {
-  template <typename V>
-  struct kv_t final {
-    constexpr decltype(auto) key() const noexcept { return K; }
-    constexpr const V& value() const noexcept { return value_; }
-    V value_;
-  };
-
-  constexpr decltype(auto) operator()() const noexcept { return K; }
+  constexpr auto operator()() const noexcept { return K; }
 
   template <typename V>
-  constexpr decltype(auto) operator=(V&& v) {
-    return kv_t<V>{std::forward<V>(v)};
+  constexpr decltype(auto) operator=(V v) const {
+    return kv_t<key_t<K>{}, V>{v};
   }
 };
 
 template <auto V>
 struct value_t final {
-  constexpr decltype(auto) operator()() const noexcept { return V; }
+  constexpr auto operator()() const noexcept { return V; }
 };
 }  // namespace cordo_internal_kv
 
@@ -33,8 +37,7 @@ namespace cordo {
 
 using ::cordo_internal_kv::key_t;
 using ::cordo_internal_kv::value_t;
-template <auto K, typename V>
-using kv_t = typename ::cordo_internal_kv::key_t<K>::template kv_t<V>;
+using ::cordo_internal_kv::kv_t;
 
 namespace literals {
 

@@ -20,6 +20,9 @@ int main(int argc, const char** argv) {
   constexpr auto acc = cordo::field(&Foo::x);
   constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
 
+  constexpr auto kv = ("x"_key = acc);
+
+
   Foo a{.x = 3};
   std::cout << a.x << "\n";
   cordo::get(a, acc) = 5;
@@ -32,11 +35,10 @@ int main(int argc, const char** argv) {
 
   std::cout << cordo::get.as<int>(b, acc) << "\n";
 
-#if 0
-  cordo::named_tuple_t<Foo, x_field> desc{};
-  cordo::get(a, desc["x"_t]) = 12;
+
+  cordo::struct_<"Foo"_key, Foo, "x"_key = acc> desc{};
+  cordo::get(a, desc["x"_key]) = 12;
   std::cout << cordo::get(a, acc) << "\n";
-#endif
 
   constexpr auto prop_random = cordo::property(&Foo::random);
   std::cout << cordo::get(a, prop_random) << "\n";
@@ -57,10 +59,10 @@ int main(int argc, const char** argv) {
   std::cout << cordo::get((const Baz&)baz, composed_z) << "\n";
 
   auto ppp = (123_key = 15);
-  std::cout << ppp.key()() << " " << ppp.value() << "\n";
+  std::cout << ppp.key()()() << " " << ppp.value() << "\n";
 
   auto sss = ("foo"_key = 16);
-  std::cout << sss.key()() << " " << sss.value() << "\n";
+  std::cout << sss.key()()() << " " << sss.value() << "\n";
 
   std::cout << (cordo::get(a, acc) = 89) << "\n";
   return 0;
