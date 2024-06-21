@@ -34,9 +34,9 @@ int main(int argc, const char** argv) {
 
   std::cout << cordo::get.as<int>(b, acc) << "\n";
 
-  cordo::struct_<"Foo"_key, Foo, ("x"_key = acc)> desc{};
+  cordo::struct_<"Foo"_key, Foo, ("x"_key = acc), (0_key = acc)> desc{};
   cordo::get(a, desc["x"_key]) = 12;
-  std::cout << cordo::get(a, acc) << "\n";
+  std::cout << cordo::get(a, desc[0_key]) << "\n";
 
   constexpr auto prop_random = cordo::property(&Foo::random);
   std::cout << cordo::get(a, prop_random) << "\n";
