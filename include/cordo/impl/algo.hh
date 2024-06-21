@@ -5,6 +5,7 @@
 namespace cordo_internal_algo {
 template <auto A>
 struct algo_t final {};
+
 }  // namespace cordo_internal_algo
 
 namespace cordo {

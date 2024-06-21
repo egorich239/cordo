@@ -5,6 +5,7 @@
 #include "cordo/impl/accessor.hh"
 #include "cordo/impl/algo.hh"
 #include "cordo/impl/get2.hh"
+#include "cordo/impl/macros.hh"
 
 namespace cordo_internal_compose {
 
@@ -24,16 +25,15 @@ namespace cordo {
 
 inline constexpr struct {
   template <accessor O, accessor I>
-  constexpr decltype(auto) operator()(O outer, I inner) const noexcept {
-    return cordo_internal_compose::compose_t<O, I>{outer, inner};
-  }
+  CORDO_INTERNAL_LAMBDA_(  //
+      operator(), (O outer, I inner),
+      (cordo_internal_compose::compose_t<O, I>{outer, inner}));
 
   template <accessor O, accessor I, accessor... Is>
-  constexpr decltype(auto) operator()(O outer, I inner,
-                                      Is... is) const noexcept {
-    return (*this)(cordo_internal_compose::compose_t<O, I>{outer, inner},
-                   is...);
-  }
+  CORDO_INTERNAL_LAMBDA_(
+      operator(), (O outer, I inner, Is... is),
+      ((*this)(cordo_internal_compose::compose_t<O, I>{outer, inner}, is...)));
+
 } compose{};
 
 template <accessor O, accessor I, typename S>
