@@ -22,20 +22,25 @@ struct invoke_t final {
   template <auto A, typename... Args>
   constexpr decltype(auto) operator()(const algo_t<A> &a,
                                       Args &&...args) const {
-    return this->resolve(overload_prio_t<2>{}, a, (Args &&)args...);
+    return this->resolve(overload_prio_t<4>{}, a, (Args &&)args...);
   }
 
  private:
   template <auto A, typename... Args>
-  constexpr auto resolve(overload_prio_t<2>, const algo_t<A> &a, Args &&...args)
+  constexpr auto resolve(overload_prio_t<3>, const algo_t<A> &a, Args &&...args)
       const -> decltype(cordo_algo(a, (Args &&)args...)) {
     return cordo_algo(a, (Args &&)args...);
   }
   template <auto A, typename... Args>
-  constexpr auto resolve(overload_prio_t<1>, const algo_t<A> &a,
+  constexpr auto resolve(overload_prio_t<2>, const algo_t<A> &a,
                          Args &&...args) const
       -> decltype(cordo_algo(a, ::cordo::adl_hook_t{}, (Args &&)args...)) {
     return cordo_algo(a, ::cordo::adl_hook_t{}, (Args &&)args...);
+  }
+  template <auto A, typename... Args>
+  constexpr auto resolve(overload_prio_t<1>, const algo_t<A> &, Args &&...args)
+      const -> decltype(A((Args &&)args...)) {
+    return A((Args &&)args...);
   }
 };
 }  // namespace cordo_internal_algo

@@ -30,6 +30,8 @@ int main(int argc, const char** argv) {
   const Foo b = a;
   std::cout << cordo::get2(b, acc) << "\n";
 
+  std::cout << cordo::get2.as<int>(b, acc) << "\n";
+
 #if 0
   cordo::named_tuple_t<Foo, x_field> desc{};
   cordo::get(a, desc["x"_t]) = 12;
