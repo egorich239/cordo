@@ -8,29 +8,29 @@
 #include "cordo/impl/meta.hh"
 
 namespace cordo_internal_get {
-inline constexpr struct {
+struct get_cpo_t final {
   constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
     return {};
   }
-  int x = 3;
-} get_cpo{};
+};
 
-inline constexpr struct {
+struct get_as_cpo_t final {
   constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
     return {};
   }
   template <typename T, ::cordo::accessor A, typename S>
-  CORDO_INTERNAL_LAMBDA_R_(                                //
-      operator(),                                          //
-      (::cordo::tag_t<T>, S&& s, A a) const,               //
-      (::cordo::invoke(::cordo::cpo_t<get_cpo>{}, s, a)),  //
+  CORDO_INTERNAL_LAMBDA_R_(                                    //
+      operator(),                                              //
+      (::cordo::tag_t<T>, S&& s, A a) const,                   //
+      (::cordo::invoke(::cordo::cpo_t<get_cpo_t{}>{}, s, a)),  //
       requires(std::is_same_v<T, std::remove_cvref_t<typename A::value_t>>));
-} get_as_cpo{};
+};
 }  // namespace cordo_internal_get
 
 namespace cordo {
-using get_cpo = cpo_t<::cordo_internal_get::get_cpo>;
-using get_as_cpo = cpo_t<::cordo_internal_get::get_as_cpo>;
+using get_cpo = cpo_t<::cordo_internal_get::get_cpo_t{}>;
+using get_as_cpo = cpo_t<::cordo_internal_get::get_as_cpo_t{}>;
+
 inline constexpr struct {
   template <::cordo::accessor A>
   CORDO_INTERNAL_LAMBDA_(                         //

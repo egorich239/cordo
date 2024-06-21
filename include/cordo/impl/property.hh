@@ -85,7 +85,7 @@ template <typename S, typename T,
           ::cordo_internal_property::property_const<S, T> Const>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (const ::cordo::get_cpo&, adl_tag,
+    (::cordo::get_cpo, adl_tag,
      const typename ::cordo_internal_property::property_t<S, T, Mut,
                                                           Const>::tuple_t& s,
      ::cordo_internal_property::property_t<S, T, Mut, Const> p),  //
@@ -96,7 +96,7 @@ template <typename S, typename T,
           ::cordo_internal_property::property_const<S, T> Const>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (const ::cordo::get_cpo&, adl_tag,
+    (::cordo::get_cpo, adl_tag,
      typename ::cordo_internal_property::property_t<S, T, Mut, Const>::tuple_t&
          s,
      ::cordo_internal_property::property_t<S, T, Mut, Const> p),  //

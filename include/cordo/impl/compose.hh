@@ -38,7 +38,7 @@ namespace cordo_internal_cpo {
 template <accessor O, accessor I, typename S>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (const ::cordo::get_cpo&, adl_tag, S&& s,
+    (::cordo::get_cpo, adl_tag, S&& s,
      ::cordo_internal_compose::compose_t<O, I> c),  //
     (::cordo::get(::cordo::get((S&&)s, c.outer_), c.inner_)));
 }  // namespace cordo_internal_cpo

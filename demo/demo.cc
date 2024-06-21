@@ -22,7 +22,6 @@ int main(int argc, const char** argv) {
 
   constexpr auto kv = ("x"_key = acc);
 
-
   Foo a{.x = 3};
   std::cout << a.x << "\n";
   cordo::get(a, acc) = 5;
@@ -35,8 +34,7 @@ int main(int argc, const char** argv) {
 
   std::cout << cordo::get.as<int>(b, acc) << "\n";
 
-
-  cordo::struct_<"Foo"_key, Foo, "x"_key = acc> desc{};
+  cordo::struct_<"Foo"_key, Foo, ("x"_key = acc)> desc{};
   cordo::get(a, desc["x"_key]) = 12;
   std::cout << cordo::get(a, acc) << "\n";
 

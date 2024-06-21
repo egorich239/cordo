@@ -37,12 +37,12 @@ inline constexpr struct {
 
 namespace cordo_internal_cpo {
 template <typename T, typename S>
-T* cordo_cpo(const ::cordo::get_as_cpo&, adl_tag, tag_t<T>, S& s,
+T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>, S& s,
              ::cordo_internal_erased::erased_t<S> e) {
   return e.key_ == &typeid_t<T>::key ? (T*)e.mut_(s) : nullptr;
 }
 template <typename T, typename S>
-const T* cordo_cpo(const ::cordo::get_as_cpo&, adl_tag, tag_t<T>, const S& s,
+const T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>, const S& s,
                    ::cordo_internal_erased::erased_t<S> e) {
   return e.key_ == &typeid_t<T>::key ? (const T*)e.const_(s) : nullptr;
 }
