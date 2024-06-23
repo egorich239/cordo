@@ -5,7 +5,9 @@
 namespace cordo_internal_meta {
 
 template <typename T>
-struct tag_t final {};
+struct tag_t final {
+  using type = T;
+};
 
 template <typename... T>
 struct types_t final {};

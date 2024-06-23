@@ -63,5 +63,11 @@ int main(int argc, const char** argv) {
   std::cout << sss.key()()() << " " << sss.value() << "\n";
 
   std::cout << (cordo::get(x_acc, a) = 89) << "\n";
+
+  struct Noisy {
+    int x = 7;
+    ~Noisy() { std::cout << "loud\n";}
+  };
+  std::cout << cordo::any::make(Noisy{}).as<Noisy>()->x << "\n";
   return 0;
 }
