@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
+#include <tuple>
 #include <type_traits>
 
 #include "cordo/impl/cpo.hh"
@@ -14,7 +15,10 @@ namespace cordo_internal_any {
 // template <typename... E>
 struct any_storage_t final {
  public:
-  ~any_storage_t() { dtor_(&storage_[0]); }
+  constexpr any_storage_t() noexcept = default;
+  ~any_storage_t() {
+    if (dtor_) dtor_(storage());
+  }
 
   template <typename T>
   static any_storage_t make(T&& v)
@@ -24,15 +28,18 @@ struct any_storage_t final {
     return any_storage_t(::cordo::typeid_t<V>{}, (T&&)v);
   }
 
+  const void* storage() const noexcept { return &storage_[0]; }
+  void* storage() noexcept { return &storage_[0]; }
+
   template <typename T>
   const T* as() const noexcept {
     if (&::cordo::typeid_t<T>::key != typeid_) return nullptr;
-    return std::launder(reinterpret_cast<const T*>(&storage_[0]));
+    return std::launder(reinterpret_cast<const T*>(storage()));
   }
   template <typename T>
   T* as() noexcept {
     if (&::cordo::typeid_t<T>::key != typeid_) return nullptr;
-    return std::launder(reinterpret_cast<T*>(&storage_[0]));
+    return std::launder(reinterpret_cast<T*>(storage()));
   }
 
  private:
@@ -47,13 +54,13 @@ struct any_storage_t final {
   }
 
   alignas(std::max_align_t) std::byte storage_[24];
-  void (*dtor_)(void*);
-  const char* typeid_;
+  void (*dtor_)(void*) = nullptr;
+  const char* typeid_ = nullptr;
 };
 
 struct cpo_erasure_traits final {
   template <typename C, typename T, typename... Args>
-  static constexpr ::cordo::tag_t<any_storage_t (*)(T, Args...)> prefix_(
+  static constexpr ::cordo::tag_t<any_storage_t (*)(C, T, Args...)> prefix_(
       ::cordo::tag_t<T>, ::cordo::tag_t<C(Args...)>) noexcept {
     return {};
   }
@@ -80,19 +87,17 @@ inline constexpr struct {
   constexpr auto resolve(::cordo::overload_prio_t<1>, ::cordo::tag_t<T>,
                          ::cordo::tag_t<E>,
                          ::cordo::tag_t<C(Args...)>) const noexcept {
-    return +[](E* v, Args... a) {
-      return any_storage_t::make(
-          ::cordo::invoke(C{}, *std::launder((T*)v), (Args&&)a...));
+    return +[](C c, E v, Args... a) {
+      return any_storage_t::make(::cordo::invoke(
+          c, *std::launder((std::remove_reference_t<T>*)v), (Args&&)a...));
     };
   }
-  template <typename C, typename T, typename E, typename... Args,
-            typename = decltype(any_storage_t::make(::cordo::invoke(
-                C{}, std::declval<T>(), std::declval<Args>()...)))>
-  constexpr auto resolve(::cordo::overload_prio_t<0>, ::cordo::tag_t<T>,
-                         ::cordo::tag_t<E>,
-                         ::cordo::tag_t<C(Args...)>) const noexcept {
-    return nullptr;
-  }
+    template <typename C, typename T, typename E, typename... Args>
+    constexpr auto resolve(::cordo::overload_prio_t<0>, ::cordo::tag_t<T>,
+                           ::cordo::tag_t<E>,
+                           ::cordo::tag_t<C(Args...)>) const noexcept {
+      return nullptr;
+    }
 
  public:
   template <typename T, typename Erasure>
@@ -108,8 +113,77 @@ inline constexpr struct {
   }
 } make_any_cpo_cb{};
 
+template <typename... Erasures>
+struct any final {
+  template <typename T>
+  explicit any(T&& v)
+      : storage_{any_storage_t::make((T&&)v)},
+        cpos_{make_any_cpo_cb(::cordo::tag_t<std::remove_cvref_t<T>>{},
+                              ::cordo::tag_t<Erasures>{})...} {}
+
+  explicit any(any_storage_t&& s)
+    requires(sizeof...(Erasures) == 0)
+      : storage_{(any_storage_t)s} {}
+
+  template <typename T>
+  const T* as() const noexcept {
+    return storage_.as<T>();
+  }
+  template <typename T>
+  T* as() noexcept {
+    return storage_.as<T>();
+  }
+
+  template <typename C, typename... Args>
+  any<> invoke(C c, Args&&... args) const {
+    return this->try_invoke(::cordo::overload_prio_t<1>{},
+                            ::cordo::value_t<sizeof...(Erasures)>{}, c,
+                            (Args&&)args...);
+  }
+
+ private:
+  any_storage_t storage_;
+  std::tuple<any_cpo_cb_t<Erasures>...> cpos_;
+
+ private:
+  template <::std::size_t N, typename C, typename... Args>
+  CORDO_INTERNAL_LAMBDA_R_(  //
+      try_invoke,            //
+      (::cordo::overload_prio_t<1>, ::cordo::value_t<N>, C c, Args&&... args)
+          const,  //
+      (any<>(std::get<sizeof...(Erasures) - N>(this->cpos_)
+                 .const_(c, this->storage_.storage(), (Args&&)args...))),
+      requires(N != 0));
+
+  template <::std::size_t N, typename C, typename... Args>
+  CORDO_INTERNAL_LAMBDA_R_(  //
+      try_invoke,            //
+      (::cordo::overload_prio_t<0>, ::cordo::value_t<N>, C c, Args&&... args)
+          const,  //
+      (this->try_invoke(::cordo::overload_prio_t<1>{},
+                        ::cordo::value_t<N - 1>{}, c, (Args&&)args...)),
+      requires(N > 1));
+
+  template <::std::size_t N, typename C, typename... Args>
+  CORDO_INTERNAL_LAMBDA_R_(  //
+      try_invoke,            //
+      (::cordo::overload_prio_t<1>, ::cordo::value_t<N>, C c,
+       Args&&... args),  //
+      (any<>(std::get<sizeof...(Erasures) - N>(this->cpos_)
+                 .mut_(c, this->storage_.storage(), (Args&&)args...))),
+      requires(N != 0));
+
+  template <::std::size_t N, typename C, typename... Args>
+  CORDO_INTERNAL_LAMBDA_R_(  //
+      try_invoke,            //
+      (::cordo::overload_prio_t<0>, ::cordo::value_t<N>, C c,
+       Args&&... args),  //
+      (this->try_invoke(::cordo::overload_prio_t<1>{},
+                        ::cordo::value_t<N - 1>{}, c, (Args&&)args...)),
+      requires(N > 1));
+};
 }  // namespace cordo_internal_any
 
 namespace cordo {
-using any = ::cordo_internal_any::any_storage_t;
+using ::cordo_internal_any::any;
 }  // namespace cordo

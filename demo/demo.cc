@@ -66,8 +66,11 @@ int main(int argc, const char** argv) {
 
   struct Noisy {
     int x = 7;
-    ~Noisy() { std::cout << "loud\n";}
+    ~Noisy() { std::cout << "loud\n"; }
   };
-  std::cout << cordo::any::make(Noisy{}).as<Noisy>()->x << "\n";
+  std::cout << cordo::any<>(Noisy{}).as<Noisy>()->x << "\n";
+
+  cordo::any<cordo::get_cpo(const Foo&)> erased_acc{x_acc};
+  std::cout << *erased_acc.invoke(cordo::get_cpo{}, a).as<int>() << "\n";
   return 0;
 }
