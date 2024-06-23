@@ -17,44 +17,44 @@ struct Baz {
 int main(int argc, const char** argv) {
   using namespace ::cordo::literals;
 
-  constexpr auto acc = cordo::field(&Foo::x);
+  constexpr auto x_acc = cordo::field(&Foo::x);
   constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
 
-  constexpr auto kv = ("x"_key = acc);
+  constexpr auto kv = ("x"_key = x_acc);
 
   Foo a{.x = 3};
   std::cout << a.x << "\n";
-  cordo::get(a, acc) = 5;
+  cordo::get(x_acc, a) = 5;
   std::cout << a.x << "\n";
-  cordo::get(a, x_field) = 13;
+  cordo::get(x_field, a) = 13;
   std::cout << a.x << "\n";
 
   const Foo b = a;
-  std::cout << cordo::get(b, acc) << "\n";
+  std::cout << cordo::get(x_acc, b) << "\n";
 
-  std::cout << cordo::get.as<int>(b, acc) << "\n";
+  std::cout << cordo::get.as<int>(x_acc, b) << "\n";
 
-  cordo::struct_<"Foo"_key, Foo, ("x"_key = acc), (0_key = acc)> desc{};
-  cordo::get(a, desc["x"_key]) = 12;
-  std::cout << cordo::get(a, desc[0_key]) << "\n";
+  cordo::struct_<"Foo"_key, Foo, kv, (0_key = x_acc)> mirror{};
+  cordo::get(mirror["x"_key], a) = 12;
+  std::cout << cordo::get(mirror[0_key], a) << "\n";
 
   constexpr auto prop_random = cordo::property(&Foo::random);
-  std::cout << cordo::get(a, prop_random) << "\n";
+  std::cout << cordo::get(prop_random, a) << "\n";
   constexpr auto prop_x_const = cordo::property(&Foo::x_const);
-  std::cout << cordo::get(a, prop_x_const) << "\n";
+  std::cout << cordo::get(prop_x_const, a) << "\n";
   constexpr auto prop_x = cordo::property(&Foo::x_const, &Foo::x_mut);
-  cordo::get(a, prop_x) = 16;
-  std::cout << cordo::get((const Foo&)a, prop_x) << "\n";
+  cordo::get(prop_x, a) = 16;
+  std::cout << cordo::get(prop_x, (const Foo&)a) << "\n";
 
-  constexpr auto erased_x = cordo::erased(cordo::value_t<acc>());
-  std::cout << *cordo::get.as<int>(a, erased_x) << " "
-            << cordo::get.as<float>(a, erased_x) << "\n";
+  constexpr auto erased_x = cordo::erased(cordo::value_t<x_acc>());
+  std::cout << *cordo::get.as<int>(erased_x, a) << " "
+            << cordo::get.as<float>(erased_x, a) << "\n";
 
   constexpr auto composed_z =
       cordo::compose(cordo::field(&Baz::l), cordo::field(&Foo::x));
   Baz baz{};
-  cordo::get(baz, composed_z) = 7;
-  std::cout << cordo::get((const Baz&)baz, composed_z) << "\n";
+  cordo::get(composed_z, baz) = 7;
+  std::cout << cordo::get(composed_z, (const Baz&)baz) << "\n";
 
   auto ppp = (123_key = 15);
   std::cout << ppp.key()()() << " " << ppp.value() << "\n";
@@ -62,6 +62,6 @@ int main(int argc, const char** argv) {
   auto sss = ("foo"_key = 16);
   std::cout << sss.key()()() << " " << sss.value() << "\n";
 
-  std::cout << (cordo::get(a, acc) = 89) << "\n";
+  std::cout << (cordo::get(x_acc, a) = 89) << "\n";
   return 0;
 }

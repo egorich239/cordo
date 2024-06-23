@@ -17,8 +17,8 @@ struct erased_t final {
 // This should either be detected-and-forbidden, or detected-and-circumvented.
 template <typename S, typename A, A a>
 struct erased_get_t final {
-  static void* const_(const S& s) { return (void*)&::cordo::get(s, a); }
-  static void* mut_(S& s) { return (void*)&::cordo::get(s, a); }
+  static void* const_(const S& s) { return (void*)&::cordo::get(a, s); }
+  static void* mut_(S& s) { return (void*)&::cordo::get(a, s); }
 };
 }  // namespace cordo_internal_erased
 
@@ -37,13 +37,13 @@ inline constexpr struct {
 
 namespace cordo_internal_cpo {
 template <typename T, typename S>
-T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>, S& s,
-             ::cordo_internal_erased::erased_t<S> e) {
+T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>,
+             ::cordo_internal_erased::erased_t<S> e, S& s) {
   return e.key_ == &typeid_t<T>::key ? (T*)e.mut_(s) : nullptr;
 }
 template <typename T, typename S>
-const T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>, const S& s,
-                   ::cordo_internal_erased::erased_t<S> e) {
+const T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>,
+                   ::cordo_internal_erased::erased_t<S> e, const S& s) {
   return e.key_ == &typeid_t<T>::key ? (const T*)e.const_(s) : nullptr;
 }
 }  // namespace cordo_internal_cpo

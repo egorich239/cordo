@@ -33,14 +33,14 @@ namespace cordo_internal_cpo {
 template <typename S, typename T>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (::cordo::get_cpo, adl_tag, S& s,
-     ::cordo_internal_field::field_t<S, T> f),  //
+    (::cordo::get_cpo, adl_tag, ::cordo_internal_field::field_t<S, T> f,
+     S& s),  //
     (s.*(f.field_)));
 
 template <typename S, typename T>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
-    (::cordo::get_cpo, adl_tag, const S& s,
-     ::cordo_internal_field::field_t<S, T> f),  //
+    (::cordo::get_cpo, adl_tag, ::cordo_internal_field::field_t<S, T> f,
+     const S& s),  //
     (s.*(f.field_)));
 }  // namespace cordo_internal_cpo

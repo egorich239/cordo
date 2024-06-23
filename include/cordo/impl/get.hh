@@ -21,8 +21,8 @@ struct get_as_cpo_t final {
   template <typename T, ::cordo::accessor A, typename S>
   CORDO_INTERNAL_LAMBDA_R_(                                    //
       operator(),                                              //
-      (::cordo::tag_t<T>, S&& s, A a) const,                   //
-      (::cordo::invoke(::cordo::cpo_t<get_cpo_t{}>{}, s, a)),  //
+      (::cordo::tag_t<T>, A a, S&& s) const,                   //
+      (::cordo::invoke(::cordo::cpo_t<get_cpo_t{}>{}, a, s)),  //
       requires(std::is_same_v<T, std::remove_cvref_t<typename A::value_t>>));
 };
 }  // namespace cordo_internal_get
@@ -35,29 +35,29 @@ inline constexpr struct {
   template <::cordo::accessor A>
   CORDO_INTERNAL_LAMBDA_(                         //
       operator(),                                 //
-      (const typename A::tuple_t& s, A a) const,  //
-      (::cordo::invoke(get_cpo{}, s, a)));
+      (A a, const typename A::tuple_t& s) const,  //
+      (::cordo::invoke(get_cpo{}, a, s)));
 
   template <::cordo::accessor A>
   CORDO_INTERNAL_LAMBDA_(                   //
       operator(),                           //
-      (typename A::tuple_t& s, A a) const,  //
-      (::cordo::invoke(get_cpo{}, s, a)));
+      (A a, typename A::tuple_t& s) const,  //
+      (::cordo::invoke(get_cpo{}, a, s)));
 
   template <::cordo::accessor A>
-  constexpr void operator()(typename A::tuple_t&& s, A a) const = delete;
+  constexpr void operator()(A, typename A::tuple_t&&) const = delete;
 
   template <typename T, ::cordo::erased_accessor A>
   CORDO_INTERNAL_LAMBDA_(                         //
       as,                                         //
-      (const typename A::tuple_t& s, A a) const,  //
-      (::cordo::invoke(get_as_cpo{}, ::cordo::tag_t<T>{}, s, a)));
+      (A a, const typename A::tuple_t& s) const,  //
+      (::cordo::invoke(get_as_cpo{}, ::cordo::tag_t<T>{}, a, s)));
   template <typename T, ::cordo::erased_accessor A>
   CORDO_INTERNAL_LAMBDA_(                   //
       as,                                   //
-      (typename A::tuple_t& s, A a) const,  //
-      (::cordo::invoke(get_as_cpo{}, ::cordo::tag_t<T>{}, s, a)));
+      (A a, typename A::tuple_t& s) const,  //
+      (::cordo::invoke(get_as_cpo{}, ::cordo::tag_t<T>{}, a, s)));
   template <typename T, ::cordo::erased_accessor A>
-  constexpr void as(typename A::tuple_t&& s, A a) const = delete;
+  constexpr void as(A, typename A::tuple_t&&) const = delete;
 } get{};
 }  // namespace cordo

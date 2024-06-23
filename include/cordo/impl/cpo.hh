@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+#include "cordo/impl/accessor.hh"
 #include "cordo/impl/macros.hh"
 #include "cordo/impl/meta.hh"
 
