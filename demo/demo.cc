@@ -70,7 +70,7 @@ int main(int argc, const char** argv) {
   };
   std::cout << cordo::any<>(Noisy{}).as<Noisy>()->x << "\n";
 
-  cordo::any<cordo::get_cpo(const Foo&)> erased_acc{x_acc};
+  cordo::any<cordo::any_v(cordo::get_cpo, const Foo&)> erased_acc{x_acc};
   std::cout << *erased_acc.invoke(cordo::get_cpo{}, a).as<int>() << "\n";
   return 0;
 }

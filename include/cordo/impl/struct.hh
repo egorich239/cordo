@@ -17,7 +17,7 @@ struct struct_ final {
   using tuple_t = S;
   using fields_t = ::cordo::values_t<Fields...>;
 
-  constexpr auto key() const noexcept { return Name; }
+  constexpr auto name() const noexcept { return Name; }
   constexpr auto fields() const noexcept { return fields_t{}; }
 
   template <auto K>
