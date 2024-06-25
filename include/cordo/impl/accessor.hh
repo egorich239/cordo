@@ -4,9 +4,14 @@
 
 #include "cordo/impl/core/cpo.hh"
 #include "cordo/impl/core/kv.hh"
+#include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
 
-namespace cordo {
+namespace cordo_internal_cpo {
+struct adl_tag final {};
+}  // namespace cordo_internal_cpo
+
+namespace cordo_internal_accessor {
 template <typename A>
 concept erased_accessor = requires {
   requires std::is_default_constructible_v<A>;
@@ -25,6 +30,30 @@ concept accessor = requires {
 
   typename A::value_t;  // TODO: field_t?
 };
+
+struct accessor_implicit_ctor_cpo_t final {
+  constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
+    return {};
+  }
+
+  constexpr auto operator()(accessor auto a) const noexcept { return a; }
+};
+using accessor_implicit_ctor_cpo =
+    ::cordo::cpo_t<accessor_implicit_ctor_cpo_t{}>;
+
+struct make_accessor_t final {
+  template <typename T>
+  CORDO_INTERNAL_LAMBDA_(  //
+      operator(),          //
+      (T v) const,         //
+      (::cordo::invoke(accessor_implicit_ctor_cpo{}, v)));
+};
+}  // namespace cordo_internal_accessor
+
+namespace cordo {
+using ::cordo_internal_accessor::accessor;
+using ::cordo_internal_accessor::erased_accessor;
+inline constexpr ::cordo_internal_accessor::make_accessor_t make_accessor{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {
@@ -32,5 +61,4 @@ using ::cordo::accessor;
 using ::cordo::cpo_t;
 using ::cordo::tag_t;
 using ::cordo::typeid_t;
-struct adl_tag final {};
 }  // namespace cordo_internal_cpo

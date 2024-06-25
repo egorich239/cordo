@@ -18,15 +18,11 @@ int main(int argc, const char** argv) {
   using namespace ::cordo::literals;
 
   constexpr auto x_acc = cordo::field(&Foo::x);
-  constexpr auto x_field = cordo::named("x"_key, cordo::field(&Foo::x));
-
   constexpr auto kv = ("x"_key = x_acc);
 
   Foo a{.x = 3};
   std::cout << a.x << "\n";
   cordo::get(x_acc, a) = 5;
-  std::cout << a.x << "\n";
-  cordo::get(x_field, a) = 13;
   std::cout << a.x << "\n";
 
   const Foo b = a;
@@ -34,7 +30,7 @@ int main(int argc, const char** argv) {
 
   std::cout << cordo::get.as<int>(x_acc, b) << "\n";
 
-  cordo::struct_<"Foo"_key, Foo, kv, (0_key = x_acc)> mirror{};
+  cordo::struct_<"Foo"_key, Foo, kv, (0_key = &Foo::x)> mirror{};
   cordo::get(mirror["x"_key], a) = 12;
   std::cout << cordo::get(mirror[0_key], a) << "\n";
 

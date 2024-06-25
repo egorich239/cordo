@@ -43,4 +43,12 @@ CORDO_INTERNAL_LAMBDA_(  //
     (::cordo::get_cpo, adl_tag, ::cordo_internal_field::field_v<S, T> f,
      const S& s),  //
     (s.*(f.field_)));
+
+template <typename S, typename T>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_cpo,           //
+    (::cordo_internal_accessor::accessor_implicit_ctor_cpo, adl_tag,
+     T(S::*f)),  //
+    (::cordo::field(f)));
+
 }  // namespace cordo_internal_cpo
