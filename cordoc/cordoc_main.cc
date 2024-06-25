@@ -41,7 +41,7 @@ class Cb final : public MatchFinder::MatchCallback {
       const auto fqname = FS->getQualifiedNameAsString();
       std::cout << "constexpr auto cordo_cpo(\n"
                 << "    ::cordo::mirror_cpo,\n"
-                << "    ::cordo::tag_t<::" << fqname << ">) {\n";
+                << "    ::cordo::tag_t<::" << fqname << ">) noexcept {\n";
       std::cout << "  constexpr struct {\n"
                 << "    using tuple_t = " << "::" << fqname << ";\n";
       std::cout << "    using fields_t = ::cordo::values_t<\n";
@@ -50,23 +50,12 @@ class Cb final : public MatchFinder::MatchCallback {
         const auto &name = f->getNameAsString();
         if (!firstField) std::cout << ",\n";
         firstField = false;
-        std::cout << "      (\"" << name
-                  << "\"_key = ::cordo::field(&::" << fqname << "::" << name
-                  << "))";
+        std::cout << "      (\"" << name << "\"_key = &::" << fqname
+                  << "::" << name << ")";
       }
       std::cout << ">;\n";
       std::cout << "    constexpr auto name() const noexcept { return \""
-                << fqname << "\"_key; }\n";
-      std::cout << "    constexpr auto fields() const noexcept { return "
-                   "fields_t{}; }\n";
-
-      for (const auto &f : FS->fields()) {
-        const auto &name = f->getNameAsString();
-        std::cout << "    constexpr auto operator[](decltype(\"" << name
-                  << "\"_key) k) const noexcept {"
-                  << " return ::cordo::field(&::" << fqname << "::" << name
-                  << ");" << " }\n";
-      }
+                << fqname << "\"; }\n";
       std::cout << "  } result{};\n"
                 << "  return result;\n"
                 << "}\n";
@@ -83,15 +72,18 @@ CommandLineArguments makeCommandLineArgs(int argc, const char **argv) {
 }
 
 int main(int argc, const char **argv) {
-  const CommandLineArguments args = makeCommandLineArgs(argc, argv);
-  auto fs = llvm::vfs::getRealFileSystem();
-  auto files = new FileManager(FileSystemOptions(), fs);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
 
   Cb Printer;
   MatchFinder Finder;
   Finder.addMatcher(StructMatcher, &Printer);
-  auto action = newFrontendActionFactory(&Finder);
 
-  ToolInvocation Tool(args, action->create(), files);
-  return Tool.run();
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+  ClangTool Tool(OptionsParser.getCompilations(),
+                 OptionsParser.getSourcePathList());
+  return Tool.run(newFrontendActionFactory(&Finder).get());
 }
