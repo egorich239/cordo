@@ -28,8 +28,6 @@ int main(int argc, const char** argv) {
   const Foo b = a;
   std::cout << cordo::get(x_acc, b) << "\n";
 
-  std::cout << cordo::get.as<int>(x_acc, b) << "\n";
-
   cordo::struct_<"Foo"_key, Foo, kv, (0_key = &Foo::x)> mirror{};
   cordo::get(mirror["x"_key], a) = 12;
   std::cout << cordo::get(mirror[0_key], a) << "\n";
@@ -41,10 +39,6 @@ int main(int argc, const char** argv) {
   constexpr auto prop_x = cordo::property(&Foo::x_const, &Foo::x_mut);
   cordo::get(prop_x, a) = 16;
   std::cout << cordo::get(prop_x, (const Foo&)a) << "\n";
-
-  constexpr auto erased_x = cordo::erased(cordo::value_t<x_acc>());
-  std::cout << *cordo::get.as<int>(erased_x, a) << " "
-            << cordo::get.as<float>(erased_x, a) << "\n";
 
   constexpr auto composed_z =
       cordo::compose(cordo::field(&Baz::l), cordo::field(&Foo::x));

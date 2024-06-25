@@ -13,22 +13,16 @@ struct adl_tag final {};
 
 namespace cordo_internal_accessor {
 template <typename A>
-concept erased_accessor = requires {
+concept accessor = requires {
   requires std::is_default_constructible_v<A>;
 
   typename A::tuple_t;  // TODO: object_t?
+  typename A::value_t;  // TODO: field_t?
   typename ::cordo::value_t<A{}>;
 
   requires !std::is_reference_v<typename A::tuple_t> &&
                !std::is_pointer_v<typename A::tuple_t> &&
                !std::is_member_pointer_v<typename A::tuple_t>;
-};
-
-template <typename A>
-concept accessor = requires {
-  requires erased_accessor<A>;
-
-  typename A::value_t;  // TODO: field_t?
 };
 
 struct accessor_implicit_ctor_cpo_t final {
@@ -52,7 +46,6 @@ struct make_accessor_t final {
 
 namespace cordo {
 using ::cordo_internal_accessor::accessor;
-using ::cordo_internal_accessor::erased_accessor;
 inline constexpr ::cordo_internal_accessor::make_accessor_t make_accessor{};
 }  // namespace cordo
 
