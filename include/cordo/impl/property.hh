@@ -7,6 +7,7 @@
 #include "cordo/impl/core/cpo.hh"
 #include "cordo/impl/core/macros.hh"
 
+// TODO: this whole file needs tlc!
 namespace cordo_internal_property {
 template <typename F, typename S, typename T>
 concept property_mut = requires(const F& f, S& s) {
@@ -27,7 +28,8 @@ template <typename S, typename T, property_mut_or_const<S, T> Mut,
           property_const<S, T> Const>
 struct property_v final {
   using tuple_t = S;
-  using value_t = T;
+  using const_value_t = T;
+  using mut_value_t = T;
 
   Mut mut_;
   Const const_;

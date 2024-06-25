@@ -15,10 +15,11 @@ namespace cordo_internal_accessor {
 template <typename A>
 concept accessor = requires {
   requires std::is_default_constructible_v<A>;
-
-  typename A::tuple_t;  // TODO: object_t?
-  typename A::value_t;  // TODO: field_t?
   typename ::cordo::value_t<A{}>;
+
+  typename A::tuple_t;
+  typename A::const_value_t;
+  typename A::mut_value_t;
 
   requires !std::is_reference_v<typename A::tuple_t> &&
                !std::is_pointer_v<typename A::tuple_t> &&

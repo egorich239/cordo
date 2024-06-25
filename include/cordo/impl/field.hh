@@ -12,7 +12,8 @@ struct field_v final {
   static_assert(!std::is_reference_v<T>);
 
   using tuple_t = S;
-  using value_t = T;
+  using const_value_t = const T&;
+  using mut_value_t = T&;
   T S::*field_;
 };
 
@@ -48,7 +49,7 @@ template <typename S, typename T>
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
     (::cordo_internal_accessor::accessor_implicit_ctor_cpo, adl_tag,
-     T(S::*f)),  //
+     T S::*f),  //
     (::cordo::field(f)));
 
 }  // namespace cordo_internal_cpo

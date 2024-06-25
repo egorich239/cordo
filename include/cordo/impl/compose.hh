@@ -11,10 +11,18 @@ using ::cordo::accessor;
 
 template <::cordo::accessor O, ::cordo::accessor I>
 struct compose_v final {
-  static_assert(std::is_same_v<typename O::value_t, typename I::tuple_t>);
+  static_assert(std::is_reference_v<typename O::const_value_t> &&
+                std::is_same_v<std::remove_cvref_t<typename O::const_value_t>,
+                               typename I::tuple_t> &&
+                std::is_same_v<std::remove_cvref_t<typename O::mut_value_t>,
+                               typename I::tuple_t> &&
+                std::is_reference_v<typename O::mut_value_t>);
 
   using tuple_t = typename O::tuple_t;
-  using value_t = typename I::value_t;
+  using const_value_t = typename I::const_value_t;
+  using mut_value_t = std::conditional_t<
+      std::is_const_v<std::remove_reference_t<typename O::mut_value_t>>,
+      typename I::mut_value_t, typename I::const_value_t>;
 
   O outer_;
   I inner_;
