@@ -1,8 +1,12 @@
 #pragma once
 
+#include "cordo/impl/get.hh"
+
 namespace cordo_internal_erased {
+using ::cordo::value_t;
+
 template <typename S>
-struct erased_t final {
+struct erased_v final {
   using tuple_t = S;
   using const_getter_t = void* (*)(const S&);
   using mut_getter_t = void* (*)(S&);
@@ -20,30 +24,32 @@ struct erased_get_t final {
   static void* const_(const S& s) { return (void*)&::cordo::get(a, s); }
   static void* mut_(S& s) { return (void*)&::cordo::get(a, s); }
 };
-}  // namespace cordo_internal_erased
 
-namespace cordo {
-inline constexpr struct {
+struct erased_t final {
   template <::cordo::accessor A, A a>
   constexpr decltype(auto) operator()(value_t<a>) const noexcept {
     using tuple_t = typename A::tuple_t;
     using value_t = typename A::value_t;
-    using cb_t = ::cordo_internal_erased::erased_get_t<tuple_t, A, a>;
-    return ::cordo_internal_erased::erased_t<tuple_t>{
-        &::cordo::typeid_t<value_t>::key, cb_t::const_, cb_t::mut_};
+    using cb_t = erased_get_t<tuple_t, A, a>;
+    return erased_v<tuple_t>{&::cordo::typeid_t<value_t>::key, cb_t::const_,
+                             cb_t::mut_};
   }
-} erased{};
+};
+}  // namespace cordo_internal_erased
+
+namespace cordo {
+inline constexpr ::cordo_internal_erased::erased_t erased{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {
 template <typename T, typename S>
 T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>,
-             ::cordo_internal_erased::erased_t<S> e, S& s) {
+             ::cordo_internal_erased::erased_v<S> e, S& s) {
   return e.key_ == &typeid_t<T>::key ? (T*)e.mut_(s) : nullptr;
 }
 template <typename T, typename S>
 const T* cordo_cpo(::cordo::get_as_cpo, adl_tag, tag_t<T>,
-                   ::cordo_internal_erased::erased_t<S> e, const S& s) {
+                   ::cordo_internal_erased::erased_v<S> e, const S& s) {
   return e.key_ == &typeid_t<T>::key ? (const T*)e.const_(s) : nullptr;
 }
 }  // namespace cordo_internal_cpo

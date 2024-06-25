@@ -4,8 +4,8 @@
 #include <functional>
 #include <type_traits>
 
-#include "cordo/impl/cpo.hh"
-#include "cordo/impl/macros.hh"
+#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/macros.hh"
 
 namespace cordo_internal_property {
 template <typename F, typename S, typename T>
@@ -25,24 +25,20 @@ concept property_mut_or_const =
 
 template <typename S, typename T, property_mut_or_const<S, T> Mut,
           property_const<S, T> Const>
-struct property_t final {
+struct property_v final {
   using tuple_t = S;
   using value_t = T;
 
   Mut mut_;
   Const const_;
 };
-}  // namespace cordo_internal_property
 
-namespace cordo {
-
-inline constexpr struct {
+struct property_t final {
   template <typename S, typename T,
             ::cordo_internal_property::property_mut<S, T> Mut,
             ::cordo_internal_property::property_const<S, T> Const>
   constexpr decltype(auto) operator()(Const const_, Mut mut_) const noexcept {
-    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
-                                                                   const_};
+    return property_v<S, T, Mut, Const>{mut_, const_};
   }
 
   template <typename S, typename T>
@@ -50,8 +46,7 @@ inline constexpr struct {
                                       T& (S::*mut_)()) const noexcept {
     using Mut = T& (S::*)();
     using Const = const T& (S::*)() const;
-    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
-                                                                   const_};
+    return property_v<S, T, Mut, Const>{mut_, const_};
   }
 
   template <typename S, typename T>
@@ -59,24 +54,27 @@ inline constexpr struct {
                                       T& (S::*mut_)()) const noexcept {
     using Mut = T& (S::*)();
     using Const = T (S::*)() const;
-    return ::cordo_internal_property::property_t<S, T, Mut, Const>{mut_,
-                                                                   const_};
+    return property_v<S, T, Mut, Const>{mut_, const_};
   }
 
   template <typename S, typename T,
             ::cordo_internal_property::property_const<S, T> Const>
   constexpr decltype(auto) operator()(Const const_) const noexcept {
-    return ::cordo_internal_property::property_t<S, const T, Const, Const>{
-        const_, const_};
+    return property_v<S, const T, Const, Const>{const_, const_};
   }
 
   template <typename S, typename T>
   constexpr decltype(auto) operator()(T (S::*const_)() const) const noexcept {
     using Const = T (S::*)() const;
-    return ::cordo_internal_property::property_t<
-        S, const std::remove_cvref_t<T>, Const, Const>{const_, const_};
+    return property_v<S, const std::remove_cvref_t<T>, Const, Const>{const_,
+                                                                     const_};
   }
-} property{};
+};
+}  // namespace cordo_internal_property
+
+namespace cordo {
+
+inline constexpr ::cordo_internal_property::property_t property{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {
@@ -86,8 +84,8 @@ template <typename S, typename T,
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
     (::cordo::get_cpo, adl_tag,
-     ::cordo_internal_property::property_t<S, T, Mut, Const> p,
-     const typename ::cordo_internal_property::property_t<S, T, Mut,
+     ::cordo_internal_property::property_v<S, T, Mut, Const> p,
+     const typename ::cordo_internal_property::property_v<S, T, Mut,
                                                           Const>::tuple_t&
          s),  //
     (std::invoke(p.const_, s)));
@@ -98,8 +96,8 @@ template <typename S, typename T,
 CORDO_INTERNAL_LAMBDA_(  //
     cordo_cpo,           //
     (::cordo::get_cpo, adl_tag,
-     ::cordo_internal_property::property_t<S, T, Mut, Const> p,
-     typename ::cordo_internal_property::property_t<S, T, Mut,
+     ::cordo_internal_property::property_v<S, T, Mut, Const> p,
+     typename ::cordo_internal_property::property_v<S, T, Mut,
                                                     Const>::tuple_t& s),  //
     (std::invoke(p.mut_, s)));
 }  // namespace cordo_internal_cpo

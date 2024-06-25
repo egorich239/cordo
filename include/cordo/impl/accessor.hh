@@ -2,7 +2,9 @@
 
 #include <type_traits>
 
-#include "cordo/impl/kv.hh"
+#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/kv.hh"
+#include "cordo/impl/core/meta.hh"
 
 namespace cordo {
 template <typename A>
@@ -24,3 +26,11 @@ concept accessor = requires {
   typename A::value_t;  // TODO: field_t?
 };
 }  // namespace cordo
+
+namespace cordo_internal_cpo {
+using ::cordo::accessor;
+using ::cordo::cpo_t;
+using ::cordo::tag_t;
+using ::cordo::typeid_t;
+struct adl_tag final {};
+}  // namespace cordo_internal_cpo

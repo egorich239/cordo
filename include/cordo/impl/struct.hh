@@ -2,10 +2,9 @@
 
 #include <type_traits>
 
-#include "cordo/impl/kv.hh"
-#include "cordo/impl/literal.hh"
-#include "cordo/impl/meta.hh"
-#include "cordo/impl/named.hh"
+#include "cordo/impl/core/kv.hh"
+#include "cordo/impl/core/literal.hh"
+#include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_struct {
 

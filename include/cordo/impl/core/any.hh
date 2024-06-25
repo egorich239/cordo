@@ -6,9 +6,9 @@
 #include <tuple>
 #include <type_traits>
 
-#include "cordo/impl/cpo.hh"
-#include "cordo/impl/kv.hh"
-#include "cordo/impl/meta.hh"
+#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/kv.hh"
+#include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_any {
 

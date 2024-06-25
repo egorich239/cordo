@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "cordo/impl/literal.hh"
+#include "cordo/impl/core/literal.hh"
 
 namespace cordo_internal_kv {
 template <auto K>
