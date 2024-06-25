@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "cordo/cordo.hh"
+#include "demo.cordo.hh"
 
 struct Foo {
   int x;

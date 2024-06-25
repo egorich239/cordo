@@ -7,6 +7,7 @@
 // Declares llvm::cl::extrahelp.
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Tooling/ArgumentsAdjusters.h"
 #include "llvm/Support/CommandLine.h"
 
 using namespace clang;
@@ -37,29 +38,52 @@ class Cb final : public MatchFinder::MatchCallback {
             Result.Nodes.getNodeAs<clang::CXXRecordDecl>("record");
         FS && FS->isStruct() && FS->isAggregate() && !FS->getNumBases() &&
         FS->hasAttr<FinalAttr>()) {
-      std::cout << FS->getASTContext()
-                       .getTypeDeclType(const_cast<CXXRecordDecl *>(FS))
-                       .getAsString()
-                << "\n";
-      std::cout << FS->getNameAsString() << "\n";
+      const auto fqname = FS->getQualifiedNameAsString();
+      std::cout << "constexpr auto cordo_cpo(\n"
+                << "    ::cordo::mirror_cpo,\n"
+                << "    ::cordo::tag_t<::" << fqname << ">) noexcept {\n";
+      std::cout << "  constexpr struct {\n"
+                << "    using tuple_t = " << "::" << fqname << ";\n";
+      std::cout << "    using fields_t = ::cordo::values_t<\n";
+      bool firstField = true;
       for (const auto &f : FS->fields()) {
-        std::cout << f->getNameAsString() << "\n";
+        const auto &name = f->getNameAsString();
+        if (!firstField) std::cout << ",\n";
+        firstField = false;
+        std::cout << "      (\"" << name << "\"_key = &::" << fqname
+                  << "::" << name << ")";
       }
-      // FS->dump();
+      std::cout << ">;\n";
+      std::cout << "    constexpr auto name() const noexcept { return \""
+                << fqname << "\"; }\n";
+      std::cout << "  } result{};\n"
+                << "  return result;\n"
+                << "}\n";
     }
   }
 };
 
+CommandLineArguments makeCommandLineArgs(int argc, const char **argv) {
+  CommandLineArguments args{argv, argv + argc};
+  args = getClangStripOutputAdjuster()(args, "");
+  args = getClangStripDependencyFileAdjuster()(args, "");
+  args = getClangSyntaxOnlyAdjuster()(args, "");
+  return args;
+}
+
 int main(int argc, const char **argv) {
-  const std::vector<std::string> args{argv, argv + argc};
-  auto fs = llvm::vfs::getRealFileSystem();
-  auto files = new FileManager(FileSystemOptions(), fs);
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, MyToolCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
 
   Cb Printer;
   MatchFinder Finder;
   Finder.addMatcher(StructMatcher, &Printer);
-  auto action = newFrontendActionFactory(&Finder);
 
-  ToolInvocation Tool(args, action->create(), files);
-  return Tool.run();
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
+  ClangTool Tool(OptionsParser.getCompilations(),
+                 OptionsParser.getSourcePathList());
+  return Tool.run(newFrontendActionFactory(&Finder).get());
 }
