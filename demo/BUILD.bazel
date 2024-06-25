@@ -1,6 +1,6 @@
 cc_binary(
     name = "demo",
-    srcs = ["demo.cc"],
+    srcs = glob(["demo.*"]),
     copts = ["-std=c++20"],
     deps = ["//:cordo"],
 )
