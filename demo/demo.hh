@@ -1,11 +1,13 @@
 #pragma once
 
-#include "cordo/cordo.hh"
 #include <string>
 
-namespace demo {
+#include "cordo/cordo.hh"
 
-struct __attribute__((annotate("cordo"))) Book final {
+namespace demo {
+using cordo::literals::operator""_key;
+
+struct __attribute__((annotate("cordo", "foo"_key))) Book final {
   std::string author;
   std::string title;
 };

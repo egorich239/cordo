@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <unordered_map>
 
@@ -45,15 +46,13 @@ class CordocVisitor : public RecursiveASTVisitor<CordocVisitor> {
       : context_(context), state_(state) {}
 
   bool VisitCXXRecordDecl(CXXRecordDecl *decl) {
-    // if (context_->getFullLoc(decl->getBeginLoc()).getFileID() !=
-    //     context_->getFullLoc(context_->getTranslationUnitDecl()->getBeginLoc())
-    //         .getFileID()) {
-    //   return true;
-    // }
+    // TODO: ignore declarations outside the main file?
     bool attrFound = false;
     for (auto &&attr : decl->attrs()) {
-      attrFound |= (attr->getKind() == clang::attr::Annotate);
-      // TODO: check the syntax of the annotation.
+      auto *anno = dyn_cast<AnnotateAttr>(attr);
+      if (!anno || anno->getAnnotation() != "cordo") continue;
+      attrFound = true;
+      break;
     }
     if (!attrFound) {
       return true;
@@ -77,7 +76,6 @@ class CordocVisitor : public RecursiveASTVisitor<CordocVisitor> {
       return true;
     }
 
-    // TODO: Memorize namespace.
     std::string namespace_ = "";
     if (auto *ns =
             dyn_cast<NamespaceDecl>(decl->getEnclosingNamespaceContext())) {
@@ -124,18 +122,21 @@ class CordocFrontendAction : public clang::ASTFrontendAction {
  public:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &compiler, llvm::StringRef InFile) override {
+    // TODO: Reject (by default) non-header files.
     auto &sourceMgr = compiler.getSourceManager();
-    // TODO: proper filename
+    auto src = std::filesystem::path(
+        sourceMgr.getFileEntryForID(sourceMgr.getMainFileID())
+            ->getName()
+            .str());
     outFile_ =
-        std::string(
-            sourceMgr.getFileEntryForID(sourceMgr.getMainFileID())->getName()) +
-        ".cordo";
-
+        src.replace_extension(std::string(".cordo.") + src.extension().str())
+            .string();
     return std::make_unique<CordocAstConsumer>(&compiler.getASTContext(),
                                                &state_);
   }
 
   void EndSourceFileAction() override {
+    // TODO: also output sqlite db?
     std::error_code error_code;
     llvm::raw_fd_ostream outFile(outFile_, error_code, llvm::sys::fs::OF_None);
     outFile << "#pragma once\n"
