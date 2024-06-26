@@ -1,3 +1,7 @@
+#pragma once
+#include "cordo/cordo.hh"
+
+namespace demo {
 constexpr auto cordo_cpo(
     ::cordo::mirror_cpo,
     ::cordo::tag_t<::demo::Book>) noexcept {
@@ -10,3 +14,4 @@ constexpr auto cordo_cpo(
   } result{};
   return result;
 }
+}  // namespace demo

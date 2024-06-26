@@ -30,6 +30,7 @@ static cl::OptionCategory CordocCategory("cordoc options");
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 struct StructTraits final {
+  std::string namespace_;
   std::string fullName;
   std::vector<std::string> fields;
 };
@@ -58,25 +59,40 @@ class CordocVisitor : public RecursiveASTVisitor<CordocVisitor> {
       return true;
     }
     if (!decl->isStruct()) {
-      // llvm::errs() << "only structs are currently supported";
+      llvm::errs() << "only structs are currently supported\n";
+      return true;
+    }
+    if (decl->isTemplateDecl()) {
+      llvm::errs() << "templates are unsupported yet\n";
+      return true;
+    }
+    if (!decl->hasDefinition()) {
+      llvm::errs() << "struct must have a definition\n";
       return true;
     }
     if (!decl->isAggregate() || decl->getNumBases() ||
-        !decl->hasAttr<FinalAttr>()) {
-      // llvm::errs()
-      //     << "struct must be aggregate, without base classes, and final";
+        !decl->hasAttr<FinalAttr>() || decl->isInAnonymousNamespace()) {
+      llvm::errs() << "struct must be declared in a named namespace, it must "
+                      "be aggregate, without base classes and final\n";
       return true;
+    }
+
+    // TODO: Memorize namespace.
+    std::string namespace_ = "";
+    if (auto *ns =
+            dyn_cast<NamespaceDecl>(decl->getEnclosingNamespaceContext())) {
+      namespace_ = ns->getQualifiedNameAsString();
     }
 
     FullSourceLoc fullLocation = context_->getFullLoc(decl->getBeginLoc());
     if (fullLocation.isValid()) {
-      // llvm::outs() << "Found declaration " <<
-      // decl->getQualifiedNameAsString()
-      //              << " at " << fullLocation.getSpellingLineNumber() << ":"
-      //              << fullLocation.getSpellingColumnNumber() << "\n";
+      llvm::outs() << "Found declaration " << decl->getQualifiedNameAsString()
+                   << " at " << fullLocation.getSpellingLineNumber() << ":"
+                   << fullLocation.getSpellingColumnNumber() << "\n";
     }
 
     state_->structs.push_back(StructTraits{
+        .namespace_ = namespace_,
         .fullName = decl->getQualifiedNameAsString(),
         .fields = {},
     });
@@ -122,7 +138,11 @@ class CordocFrontendAction : public clang::ASTFrontendAction {
   void EndSourceFileAction() override {
     std::error_code error_code;
     llvm::raw_fd_ostream outFile(outFile_, error_code, llvm::sys::fs::OF_None);
+    outFile << "#pragma once\n"
+            << "#include \"cordo/cordo.hh\"\n\n";
     for (auto &s : state_.structs) {
+      if (!s.namespace_.empty())
+        outFile << "namespace " << s.namespace_ << " {\n";
       outFile << "constexpr auto cordo_cpo(\n"
               << "    ::cordo::mirror_cpo,\n"
               << "    ::cordo::tag_t<::" << s.fullName << ">) noexcept {\n";
@@ -142,6 +162,8 @@ class CordocFrontendAction : public clang::ASTFrontendAction {
       outFile << "  } result{};\n"
               << "  return result;\n"
               << "}\n";
+      if (!s.namespace_.empty())
+        outFile << "}  // namespace " << s.namespace_ << "\n";
     }
     outFile.close();
   }
@@ -151,40 +173,14 @@ class CordocFrontendAction : public clang::ASTFrontendAction {
   std::string outFile_;
 };
 
-#if 0
-    const auto fqname =decl->getQualifiedNameAsString();
-    std::cout << "constexpr auto cordo_cpo(\n"
-              << "    ::cordo::mirror_cpo,\n"
-              << "    ::cordo::tag_t<::" << fqname << ">) noexcept {\n";
-    std::cout << "  constexpr struct {\n"
-              << "    using tuple_t = " << "::" << fqname << ";\n";
-    std::cout << "    using fields_t = ::cordo::values_t<\n";
-    bool firstField = true;
-    for (const auto &f : decl->fields()) {
-      const auto &name = f->getNameAsString();
-      if (!firstField) std::cout << ",\n";
-      firstField = false;
-      std::cout << "      (\"" << name << "\"_key = &::" << fqname
-                << "::" << name << ")";
-    }
-    std::cout << ">;\n";
-    std::cout << "    constexpr auto name() const noexcept { return \""
-              << fqname << "\"; }\n";
-    std::cout << "  } result{};\n"
-              << "  return result;\n"
-              << "}\n";
-
-#endif
-
 int main(int argc, const char **argv) {
-  auto ExpectedParser = CommonOptionsParser::create(argc, argv, CordocCategory);
-  if (!ExpectedParser) {
-    llvm::errs() << ExpectedParser.takeError();
+  auto argsParser = CommonOptionsParser::create(argc, argv, CordocCategory);
+  if (!argsParser) {
+    llvm::errs() << argsParser.takeError();
     return 1;
   }
 
-  CommonOptionsParser &OptionsParser = ExpectedParser.get();
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-  return Tool.run(newFrontendActionFactory<CordocFrontendAction>().get());
+  CommonOptionsParser &options = argsParser.get();
+  ClangTool tool(options.getCompilations(), options.getSourcePathList());
+  return tool.run(newFrontendActionFactory<CordocFrontendAction>().get());
 }
