@@ -15,6 +15,13 @@ struct kv_t final {
   using value_t = V;
   constexpr auto key() const noexcept { return K; }
   constexpr const V& value() const noexcept { return value_; }
+
+  template <typename V2>
+  constexpr auto operator||(V2 v2) const noexcept {
+    auto res = ::cordo::li_push(v2, ::cordo::make_li(value_));
+    return kv_t<K, decltype(res)>{res};
+  }
+
   V value_;
 };
 
@@ -24,6 +31,11 @@ struct key_t final {
 
   template <typename V>
   constexpr decltype(auto) operator=(V v) const {
+    return kv_t<key_t<K>{}, V>{v};
+  }
+
+  template <typename V>
+  constexpr decltype(auto) operator<=(V v) const {
     return kv_t<key_t<K>{}, V>{v};
   }
 };
@@ -59,21 +71,25 @@ struct kv_lookup_t final {
 
 inline constexpr struct {
   template <::cordo_internal_literal::string_v L>
-  constexpr auto operator()(::cordo::overload_prio_t<3>,  value_t<L>) const noexcept {
+  constexpr auto operator()(::cordo::overload_prio_t<3>,
+                            value_t<L>) const noexcept {
     return key_t<::cordo_internal_literal::as_string_t.parse<L>()>{};
   }
   template <auto V>
-  constexpr auto operator()(::cordo::overload_prio_t<2>,value_t<key_t<V>{}>) const noexcept {
+  constexpr auto operator()(::cordo::overload_prio_t<2>,
+                            value_t<key_t<V>{}>) const noexcept {
     return key_t<V>{};
   }
   template <auto V>
-  constexpr auto operator()(::cordo::overload_prio_t<1>,value_t<V>) const noexcept {
+  constexpr auto operator()(::cordo::overload_prio_t<1>,
+                            value_t<V>) const noexcept {
     return key_t<V>{};
   }
 } make_key_impl{};
 
 template <auto V>
-using make_key = decltype(make_key_impl(::cordo::overload_prio_t<3>{},value_t<V>{}));
+using make_key =
+    decltype(make_key_impl(::cordo::overload_prio_t<3>{}, value_t<V>{}));
 
 }  // namespace cordo_internal_kv
 

@@ -33,8 +33,17 @@ void mirror_demo() {
   std::cout << cmf[0_key] << "\n";
 }
 
+void kv_demo() {
+  // This produces the inversed list!
+  // TODO: To be used with flatten fields.
+  cordo::kv_t kv = (99_key <= &Baz::l || &Foo::x || 3 || Foo{7});
+  std::cout << kv.key()() << " " << kv.value().size() << " " << kv.value().h.x
+            << " " << kv.value().t.h << "\n";
+}
+
 int main(int argc, const char** argv) {
   mirror_demo();
+  kv_demo();
 
   constexpr auto x_acc = cordo::field(&Foo::x);
   constexpr auto kv = ("x"_key = x_acc);
