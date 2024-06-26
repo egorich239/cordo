@@ -40,8 +40,8 @@ inline constexpr struct {
     constexpr size_t N = sizeof...(Cs);
     constexpr const char C[N] = {Cs...};
 
-    if (N == 0) return {};
-    if (N == 1) {
+    if constexpr (N == 0) return {};
+    if constexpr (N == 1) {
       return '0' <= C[0] && C[0] <= '9' ? R{.value = C[0] - '0', .valid = true}
                                         : R{};
     }
@@ -98,7 +98,7 @@ inline constexpr struct {
 
 inline constexpr struct {
   template <string_v L>
-  constexpr decltype(auto) parse() const noexcept {
+  constexpr auto parse() const noexcept {
     return []<size_t... I>(std::index_sequence<I...>) {
       return string_t<L.value_[I]...>{};
     }(std::make_index_sequence<sizeof(decltype(L)::value_)>());

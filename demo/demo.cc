@@ -1,7 +1,8 @@
 #include <iostream>
 
 #include "cordo/cordo.hh"
-#include "demo.cordo.hh"
+// #include "demo.cordo.hh"
+using namespace ::cordo::literals;
 
 struct Foo {
   int x;
@@ -15,12 +16,28 @@ struct Baz {
   Foo l;
 };
 
+constexpr auto cordo_cpo(cordo::mirror_cpo, cordo::tag_t<Foo>) noexcept {
+  return cordo::struct_<"Foo"_key, Foo, ("x"_key = &Foo::x),
+                        (0_key = &Foo::x)>{};
+}
+
+void mirror_demo() {
+  Foo f{.x = 3};
+  auto mf = cordo::mirror(f);
+  std::cout << mf[0_key] << " " << mf[cordo::make_key<(size_t)0>()] << "\n";
+  mf["x"_key] = 16;
+  std::cout << mf["x"_key] << "\n";
+
+  const Foo& cf = f;
+  auto cmf = cordo::mirror(cf);
+  std::cout << cmf[0_key] << "\n";
+}
+
 int main(int argc, const char** argv) {
-  using namespace ::cordo::literals;
+  mirror_demo();
 
   constexpr auto x_acc = cordo::field(&Foo::x);
   constexpr auto kv = ("x"_key = x_acc);
-
   Foo a{.x = 3};
   std::cout << a.x << "\n";
   cordo::get(x_acc, a) = 5;
@@ -29,9 +46,25 @@ int main(int argc, const char** argv) {
   const Foo b = a;
   std::cout << cordo::get(x_acc, b) << "\n";
 
+  using vt = cordo::values_t<("foo"_key = 44), (2_key = 56)>;
+  std::cout << cordo::kv_lookup(vt{}, 2_key) << "\n";
+  std::cout << cordo::kv_lookup(vt{}, "foo"_key) << "\n";
+
   cordo::struct_<"Foo"_key, Foo, kv, (0_key = &Foo::x)> mirror{};
-  cordo::get(mirror["x"_key], a) = 12;
-  std::cout << cordo::get(mirror[0_key], a) << "\n";
+  // ::cordo::get(s, ::cordo::make_accessor( ::cordo::kv_lookup(typename
+  // decltype(mirror)::fields_t{}, k))))
+  cordo::invoke(cordo::mirror_subscript_cpo{}, a, mirror, "x"_key) = 12;
+  cordo::struct_ mt = cordo::invoke(cordo::mirror_cpo{}, cordo::tag_t<Foo>());
+  static_assert(::cordo_internal_struct::struct_meta<decltype(mt)>);
+  cordo_cpo(cordo::mirror_construct_cpo{}, ::cordo_internal_cpo::adl_tag{}, mt,
+            a);
+  cordo::invoke(cordo::mirror_construct_cpo{}, mt, a);
+  auto m = cordo::mirror(a);
+  std::cout << m["x"_key] << "\n";
+  m["x"_key] = 239;
+  std::cout << m[0_key] << "\n";
+  // std::cout << cordo::invoke(cordo::mirror_subscript_cpo{}, a, mirror, 0_key)
+  // << "\n";
 
   constexpr auto prop_random = cordo::property(&Foo::random);
   std::cout << cordo::get(prop_random, a) << "\n";
@@ -48,7 +81,7 @@ int main(int argc, const char** argv) {
   std::cout << cordo::get(composed_z, (const Baz&)baz) << "\n";
 
   auto ppp = (123_key = 15);
-  std::cout << ppp.key()()() << " " << ppp.value() << "\n";
+  std::cout << ppp.key()() << " " << ppp.value() << "\n";
 
   auto sss = ("foo"_key = 16);
   std::cout << sss.key()()() << " " << sss.value() << "\n";

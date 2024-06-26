@@ -9,6 +9,19 @@
 
 namespace cordo_internal_struct {
 
+template <typename D>
+concept struct_meta = requires {
+  requires std::is_default_constructible_v<D>;
+
+  typename D::tuple_t;
+  requires !std::is_reference_v<typename D::tuple_t>;
+
+  typename D::fields_t;
+  // TODO: fields properties.
+
+  typename ::cordo::make_key<D{}.name()>;
+};
+
 template <::cordo::key_t Name, typename S, ::cordo::kv_t... Fields>
 struct struct_ final {
   static_assert(
@@ -16,35 +29,46 @@ struct struct_ final {
        ...));
 
   using tuple_t = S;
-  using fields_t = ::cordo::values_t<(
-      Fields.key() = ::cordo::make_accessor(Fields.value()))...>;
+  using fields_t = ::cordo::values_t<Fields...>;
 
   constexpr auto name() const noexcept { return Name; }
-  constexpr auto fields() const noexcept { return fields_t{}; }
+};
+
+template <struct_meta M, typename S>
+class struct_mirror final {
+  static_assert(!std::is_reference_v<S> &&
+                std::is_same_v<typename M::tuple_t, std::remove_cvref_t<S>>);
+  S& object_;
+
+ public:
+  constexpr explicit struct_mirror(S& object) noexcept : object_{object} {}
 
   template <auto K>
-  constexpr auto operator[](::cordo::key_t<K> k) const noexcept {
-    return this->resolve(k, Fields...);
-  }
+  CORDO_INTERNAL_LAMBDA_(     //
+      operator[],             //
+      (::cordo::key_t<K> k),  //
+      (::cordo::invoke(::cordo::mirror_subscript_cpo{}, this->object_, M{},
+                       k)));
 
- private:
-  template <typename K, typename F0, typename... Fs>
-  constexpr auto resolve(K k, F0 h, Fs... t) const noexcept {
-    return this->resolve2(k, h.key(), h.value(), t...);
-  }
-
-  template <typename K, typename A, typename... Fs>
-  constexpr auto resolve2(K, K, A a, Fs...) const noexcept {
-    return ::cordo::make_accessor(a);
-  }
-
-  template <typename K, typename K2, typename A, typename... Fs>
-  constexpr decltype(auto) resolve2(K k, K2, A, Fs... t) const noexcept {
-    return this->resolve(k, t...);
-  }
+  template <auto K>
+  CORDO_INTERNAL_LAMBDA_(           //
+      operator[],                   //
+      (::cordo::key_t<K> k) const,  //
+      (::cordo::invoke(::cordo::mirror_subscript_cpo{}, this->object_, M{},
+                       k)));
 };
 }  // namespace cordo_internal_struct
 
 namespace cordo {
 using ::cordo_internal_struct::struct_;
 }  // namespace cordo
+
+namespace cordo_internal_cpo {
+
+template <::cordo_internal_struct::struct_meta M, typename S>
+CORDO_INTERNAL_LAMBDA_(                                 //
+    cordo_cpo,                                          //
+    (::cordo::mirror_construct_cpo, adl_tag, M, S& s),  //
+    (::cordo_internal_struct::struct_mirror<M, S>{s}));
+
+}

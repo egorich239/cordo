@@ -11,3 +11,6 @@
 
 #define CORDO_INTERNAL_LAMBDA_(name, args, body) \
   CORDO_INTERNAL_LAMBDA_R_(name, args, body, )
+
+#define CORDO_INTERNAL_DIAG_(diag) \
+  ([]<bool flag>() { static_assert(flag, diag); }).template operator()<false>()
