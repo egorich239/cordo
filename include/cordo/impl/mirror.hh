@@ -39,15 +39,19 @@ using mirror_construct_cpo = ::cordo::cpo_t<mirror_construct_cpo_t{}>;
 using mirror_subscript_cpo = ::cordo::cpo_t<mirror_subscript_cpo_t{}>;
 
 struct mirror_t final {
+  template <typename T>
+  CORDO_INTERNAL_LAMBDA_(         //
+      t,                          //
+      (::cordo::tag_t<T>) const,  //
+      (::cordo::invoke(mirror_cpo{},
+                       ::cordo::tag_t<std::remove_cvref_t<T>>{})));
+
   template <typename S>
   CORDO_INTERNAL_LAMBDA_(  //
       operator(),          //
       (S& v) const,        //
-      (::cordo::invoke(
-          mirror_construct_cpo{},
-          ::cordo::invoke(mirror_cpo{},
-                          ::cordo::tag_t<std::remove_cvref_t<S>>{}),
-          v)));
+      (::cordo::invoke(mirror_construct_cpo{},
+                       this->t(::cordo::tag_t<std::remove_cvref_t<S>>{}), v)));
 };
 }  // namespace cordo_internal_mirror
 
@@ -58,38 +62,15 @@ using ::cordo_internal_mirror::mirror_subscript_cpo;
 inline constexpr ::cordo_internal_mirror::mirror_t mirror{};
 }  // namespace cordo
 
-// namespace cordo_internal_mirror {
+namespace cordo_internal_mirror {
 
-// template <typename S, auto T>  // TODO: named tuple
-// struct mirror_t final {
-//   S& v;
+template <typename T>
+concept mirrored = std::is_same_v<                                       //
+    typename decltype(::cordo::mirror.t(::cordo::tag_t<T>{}))::tuple_t,  //
+    std::remove_cvref_t<T>>;
 
-//   template <typename K>
-//   CORDO_INTERNAL_LAMBDA_(  //
-//       operator[],          //
-//       (K k) const,         //
-//       (::cordo::invoke(::cordo::mirror_subscript_cpo{}, T, k)));
-// };
+}  // namespace cordo_internal_mirror
 
-// inline constexpr struct {
-//   template <typename S>
-//   constexpr decltype(auto) operator()(S& v) const noexcept {
-//     constexpr auto Tuple = ::cordo::invoke(
-//         ::cordo::mirror_cpo{}, ::cordo::tag_t<std::remove_cvref_t<S>>{});
-//     return mirror_t<S, Tuple>{v};
-//   }
-// } mirror_impl;
-
-// }  // namespace cordo_internal_mirror
-
-// namespace cordo_internal_cpo {
-
-// inline constexpr struct {
-//   template <typename >
-//   CORDO_INTERNAL_LAMBDA_(  //
-//       operator(),          //
-//       (const S& v) const,  //
-//       (::cordo_internal_mirror::mirror_impl(v)));
-// } mirror{};
-
-// }  // namespace cordo
+namespace cordo {
+using ::cordo_internal_mirror::mirrored;
+}  // namespace cordo
