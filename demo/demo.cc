@@ -16,7 +16,7 @@ struct Baz {
   Foo l;
 };
 
-constexpr auto cordo_cpo(cordo::mirror_cpo, cordo::tag_t<Foo>) noexcept {
+constexpr auto cordo_cpo(cordo::mirror_traits_cpo, cordo::tag_t<Foo>) noexcept {
   return cordo::struct_<"Foo"_key, Foo, ("x"_key = &Foo::x),
                         (0_key = &Foo::x)>{};
 }
@@ -24,13 +24,15 @@ constexpr auto cordo_cpo(cordo::mirror_cpo, cordo::tag_t<Foo>) noexcept {
 void mirror_demo() {
   Foo f{.x = 3};
   auto mf = cordo::mirror(f);
-  std::cout << mf[0_key] << " " << mf[cordo::make_key<(size_t)0>()] << "\n";
+
+  std::cout << mf[0_key].v() << " " << mf[cordo::make_key<(size_t)0>()].v()
+            << "\n";
   mf["x"_key] = 16;
-  std::cout << mf["x"_key] << "\n";
+  std::cout << mf["x"_key].v() << " " << f.x << "\n";
 
   const Foo& cf = f;
   auto cmf = cordo::mirror(cf);
-  std::cout << cmf[0_key] << "\n";
+  std::cout << cmf[0_key].v() << "\n";
 }
 
 void kv_demo() {
@@ -59,19 +61,19 @@ int main(int argc, const char** argv) {
   std::cout << cordo::kv_lookup(vt{}, 2_key) << "\n";
   std::cout << cordo::kv_lookup(vt{}, "foo"_key) << "\n";
 
-  cordo::struct_<"Foo"_key, Foo, kv, (0_key = &Foo::x)> mirror{};
+  // cordo::struct_<"Foo"_key, Foo, kv, (0_key = &Foo::x)> mirror{};
   // ::cordo::get(s, ::cordo::make_accessor( ::cordo::kv_lookup(typename
   // decltype(mirror)::fields_t{}, k))))
-  cordo::invoke(cordo::mirror_subscript_cpo{}, a, mirror, "x"_key) = 12;
-  cordo::struct_ mt = cordo::invoke(cordo::mirror_cpo{}, cordo::tag_t<Foo>());
+  // cordo::invoke(cordo::mirror_subscript_cpo{}, a, mirror, "x"_key) = 12;
+  cordo::struct_ mt =
+      cordo::invoke(cordo::mirror_traits_cpo{}, cordo::tag_t<Foo>());
   static_assert(::cordo_internal_struct::struct_meta<decltype(mt)>);
-  cordo_cpo(cordo::mirror_construct_cpo{}, ::cordo_internal_cpo::adl_tag{}, mt,
-            a);
-  cordo::invoke(cordo::mirror_construct_cpo{}, mt, a);
-  auto m = cordo::mirror(a);
-  std::cout << m["x"_key] << "\n";
-  m["x"_key] = 239;
-  std::cout << m[0_key] << "\n";
+  // cordo_cpo(cordo::mirror_fn_cpo{}, ::cordo_internal_cpo::adl_tag{}, mt, a);
+  // cordo::invoke(cordo::mirror_fn_cpo{}, mt, a);
+  // auto m = cordo::mirror(a);
+  // std::cout << m["x"_key] << "\n";
+  // m["x"_key] = 239;
+  // std::cout << m[0_key] << "\n";
   // std::cout << cordo::invoke(cordo::mirror_subscript_cpo{}, a, mirror, 0_key)
   // << "\n";
 

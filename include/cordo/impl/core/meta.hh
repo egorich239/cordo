@@ -10,6 +10,46 @@ struct tag_t final {
   using type = T;
 };
 
+template <typename T>
+struct base_tag_t {};
+
+template <std::size_t N>
+struct overload_prio_t : overload_prio_t<N - 1> {};
+template <>
+struct overload_prio_t<0> {};
+
+template <typename... Vs>
+struct is_unique_marker_t;
+
+template <>
+struct is_unique_marker_t<> {};
+
+template <typename V>
+struct is_unique_marker_t<V> : base_tag_t<V> {};
+
+template <typename V, typename... Vs>
+struct is_unique_marker_t<V, Vs...> : base_tag_t<V>,
+                                      is_unique_marker_t<Vs...> {};
+
+class is_unique_impl_t final {
+  template <typename... Vs>
+  struct I {
+    static constexpr char resolve(base_tag_t<Vs>...) noexcept { return {}; }
+  };
+
+ public:
+  constexpr is_unique_impl_t() noexcept = default;
+  template <typename... Vs,
+            typename = decltype(I<Vs...>::resolve(
+                (base_tag_t<Vs>{}, is_unique_marker_t<Vs...>{})...))>
+  constexpr bool operator()(overload_prio_t<1>, tag_t<Vs>...) const noexcept {
+    return true;
+  }
+  constexpr bool operator()(overload_prio_t<0>, ...) const noexcept {
+    return false;
+  }
+};
+
 template <typename... Vs>
 struct li_t;
 
@@ -45,11 +85,6 @@ template <typename T>
 struct typeid_t final {
   static constexpr char key = 0;
 };
-
-template <std::size_t N>
-struct overload_prio_t : overload_prio_t<N - 1> {};
-template <>
-struct overload_prio_t<0> {};
 
 template <typename S, typename T>
 struct same_constness_as final {

@@ -28,35 +28,14 @@ struct struct_ final {
       (::cordo::accessor<decltype(::cordo::make_accessor(Fields.value()))> &&
        ...));
 
+  using t = S;
+
   using tuple_t = S;
   using fields_t = ::cordo::values_t<Fields...>;
 
   constexpr auto name() const noexcept { return Name; }
 };
 
-template <struct_meta M, typename S>
-class struct_mirror final {
-  static_assert(!std::is_reference_v<S> &&
-                std::is_same_v<typename M::tuple_t, std::remove_cvref_t<S>>);
-  S& object_;
-
- public:
-  constexpr explicit struct_mirror(S& object) noexcept : object_{object} {}
-
-  template <auto K>
-  CORDO_INTERNAL_LAMBDA_(     //
-      operator[],             //
-      (::cordo::key_t<K> k),  //
-      (::cordo::invoke(::cordo::mirror_subscript_cpo{}, this->object_, M{},
-                       k)));
-
-  template <auto K>
-  CORDO_INTERNAL_LAMBDA_(           //
-      operator[],                   //
-      (::cordo::key_t<K> k) const,  //
-      (::cordo::invoke(::cordo::mirror_subscript_cpo{}, this->object_, M{},
-                       k)));
-};
 }  // namespace cordo_internal_struct
 
 namespace cordo {
@@ -65,10 +44,13 @@ using ::cordo_internal_struct::struct_;
 
 namespace cordo_internal_cpo {
 
-template <::cordo_internal_struct::struct_meta M, typename S>
-CORDO_INTERNAL_LAMBDA_(                                 //
-    cordo_cpo,                                          //
-    (::cordo::mirror_construct_cpo, adl_tag, M, S& s),  //
-    (::cordo_internal_struct::struct_mirror<M, S>{s}));
+template <::cordo_internal_struct::struct_meta M, typename S, auto K>
+CORDO_INTERNAL_LAMBDA_(  //
+    cordo_cpo,           //
+    (::cordo::mirror_subscript_key_cpo, adl_tag, M, S& s,
+     ::cordo::key_t<K> k),  //
+    (::cordo::get(
+        ::cordo::make_accessor(::cordo::kv_lookup(typename M::fields_t{}, k)),
+        s)));
 
 }
