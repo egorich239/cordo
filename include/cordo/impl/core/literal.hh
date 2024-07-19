@@ -3,31 +3,56 @@
 #include <cstddef>
 #include <string_view>
 
+#include "cordo/impl/core/meta.hh"
+
 namespace cordo_internal_literal {
 template <::std::size_t N>
-struct string_v final {
-  template <char... C>
-  constexpr string_v() noexcept
-    requires(sizeof...(C) == N)
-      : value_{C...} {}
-
-  constexpr string_v(const char (&v)[N]) noexcept : value_{} {
-    for (::std::size_t t = 0; t < N; ++t) value_[t] = v[t];
+struct cstring final {
+  constexpr cstring() noexcept = default;
+  constexpr cstring(const char (&v)[N + 1]) noexcept : value{} {
+    for (::std::size_t t = 0; t <= N; ++t) value[t] = v[t];
   }
   constexpr std::string_view operator()() const noexcept {
-    return std::string_view{value_};
+    return std::string_view{value, value + N};
   }
-
-  char value_[N];
-};
-
-template <char... L>
-struct string_t final {
-  constexpr std::string_view operator()() const noexcept {
-    return std::string_view{value_};
+  template <::std::size_t M>
+  constexpr auto concat(cstring<M> other) const noexcept {
+    cstring<N + M> result{};
+    for (::std::size_t t = 0; t < N; ++t) result.value[t] = value[t];
+    for (::std::size_t t = 0; t < M; ++t) result.value[t + N] = other.value[t];
+    return result;
   }
-  static constexpr const char value_[sizeof...(L)] = {L...};
+  template <::std::size_t B, ::std::size_t E = N>
+  constexpr auto substr(::cordo::value_t<B>,
+                        ::cordo::value_t<E> = {}) const noexcept
+    requires(B <= E && E <= N)
+  {
+    cstring<E - B> result{};
+    for (::std::size_t t = B; t < E; ++t) result.value[t - B] = value[t];
+    return result;
+  }
+  constexpr ::std::size_t find(char c) const noexcept {
+    for (::std::size_t t = 0; t < N; ++t)
+      if (value[t] == c) return t;
+    return N;
+  }
+  constexpr auto reverse() const noexcept {
+    auto result = *this;
+    for (::std::size_t t = 0; t < N / 2; ++t) {
+      std::swap(result.value[t], result.value[N - 1 - t]);
+    }
+    return result;
+  }
+  auto operator<=>(const cstring&) const = default;
+
+  char value[N + 1];
 };
+template <::std::size_t N>
+cstring(const char (&)[N]) -> cstring<N - 1>;
+
+static_assert(cstring("").reverse() == cstring(""));
+static_assert(cstring("a").reverse() == cstring("a"));
+static_assert(cstring("ab").reverse() == cstring("ba"));
 
 inline constexpr struct {
   struct R final {
@@ -95,14 +120,5 @@ inline constexpr struct {
     return d ? R{r, true} : R{};
   }
 } as_index_t{};
-
-inline constexpr struct {
-  template <string_v L>
-  constexpr auto parse() const noexcept {
-    return []<size_t... I>(std::index_sequence<I...>) {
-      return string_t<L.value_[I]...>{};
-    }(std::make_index_sequence<sizeof(decltype(L)::value_)>());
-  }
-} as_string_t{};
 
 }  // namespace cordo_internal_literal

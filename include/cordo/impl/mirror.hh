@@ -16,7 +16,7 @@ concept mirror_traits = requires {
 };
 
 template <typename T>
-struct opaque_traits final {
+struct mirror_unsupported final {
   using t = T;
 };
 
@@ -29,7 +29,7 @@ struct mirror_traits_cpo_t final {
   CORDO_INTERNAL_LAMBDA_(         //
       operator(),                 //
       (::cordo::tag_t<T>) const,  //
-      (opaque_traits<T>{}));
+      (mirror_unsupported<T>{}));
 };
 
 struct mirror_make_cpo_t final {

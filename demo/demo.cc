@@ -1,3 +1,5 @@
+#include <cordo/impl/core/anno.hh>
+#include <cordo/impl/struct.hh>
 #include <iostream>
 
 #include "cordo/cordo.hh"
@@ -19,6 +21,10 @@ struct Baz {
 constexpr auto cordo_cpo(cordo::mirror_traits_cpo, cordo::tag_t<Foo>) noexcept {
   return cordo::struct_<"Foo"_key, Foo, ("x"_key = &Foo::x),
                         (0_key = &Foo::x)>{};
+}
+
+void anno_demo() {
+  ::cordo::anno(::cordo_internal_struct::field_anno_sema{}, 0_key <= &Foo::x);
 }
 
 void mirror_demo() {

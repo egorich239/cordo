@@ -41,3 +41,6 @@ using ::cordo_internal_cpo_core::cpo_t;
 inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
 }  // namespace cordo
 
+namespace cordo_internal_cpo {
+struct adl_tag final {};
+}  // namespace cordo_internal_cpo

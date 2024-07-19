@@ -7,9 +7,6 @@
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
 
-namespace cordo_internal_cpo {
-struct adl_tag final {};
-}  // namespace cordo_internal_cpo
 
 namespace cordo_internal_accessor {
 template <typename A>
