@@ -3,12 +3,13 @@
 #include <bit>
 #include <climits>
 #include <concepts>
-#include <cordo/impl/core/literal.hh>
 #include <cstddef>
 #include <type_traits>
 
 #include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/cstring.hh"
 #include "cordo/impl/core/kv.hh"
+#include "cordo/impl/core/meta.hh"
 #include "cordo/impl/mirror.hh"
 
 namespace cordo_internal_mirror {
@@ -42,17 +43,15 @@ inline constexpr struct mirror_primitive_name_t {
   }
   template <std::integral T>
   constexpr auto operator()(::cordo::tag_t<T>) const noexcept {
-    if constexpr (std::bit_ceil(sizeof(T)) != sizeof(T)) {
-      return nullptr;
-    } else if constexpr (2 * std::bit_width(sizeof(T)) * sizeof(char*) >=
-                         sizeof(NAMES)) {
-      return nullptr;
+    constexpr auto suffix =
+        ::cordo::to_cstring(::cordo::value_t<(size_t)(CHAR_BIT * sizeof(T))>{});
+    if constexpr (std::is_signed_v<T>) {
+      return ::cordo::cstring("i").concat(suffix);
     } else {
-        constexpr std::string_view name = NAMES[2 * std::bit_width(sizeof(T)) - (std::is_signed_v<T> ? 1 : 2)];
-      return ::cordo_internal_literal::string_v<>(
-          );
+      return ::cordo::cstring("u").concat(suffix);
     }
   }
+  constexpr auto operator()(...) const noexcept { return ::cordo::null_t{}; }
 } mirror_primitive_name{};
 
 template <primitive T>
@@ -60,13 +59,13 @@ struct mirror_primitive final {
   using t = T;
   using name = std::conditional_t<
       !std::is_same_v<decltype(mirror_primitive_name(::cordo::tag_t<T>{})),
-                      std::nullptr_t>,
+                      ::cordo::null_t>,
       cordo::make_key<mirror_primitive_name(::cordo::tag_t<T>{})>,
       ::cordo_internal_meta::null_t>;
 };
 
-static_assert(
-    std::is_same_v<typename mirror_primitive<int>::name, decltype("i32"_key)>);
+static_assert(std::is_same_v<typename mirror_primitive<int>::name,
+                             cordo::make_key<::cordo::cstring("i32")>>);
 
 }  // namespace cordo_internal_mirror
 

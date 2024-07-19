@@ -6,6 +6,7 @@
 #include "cordo/impl/core/cpo.hh"
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
+#include "cordo/impl/core/reflect.hh"
 
 namespace cordo_internal_mirror {
 

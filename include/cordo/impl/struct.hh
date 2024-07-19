@@ -4,8 +4,8 @@
 
 #include "cordo/impl/accessor.hh"
 #include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/cstring.hh"
 #include "cordo/impl/core/kv.hh"
-#include "cordo/impl/core/literal.hh"
 #include "cordo/impl/core/meta.hh"
 #include "cordo/impl/get.hh"
 #include "cordo/impl/mirror.hh"

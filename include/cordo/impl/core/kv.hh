@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "cordo/impl/core/literal.hh"
+#include "cordo/impl/core/cstring.hh"
 #include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_kv {
@@ -93,14 +93,14 @@ namespace literals {
 
 template <char... C>
 constexpr decltype(auto) operator""_key() noexcept
-  requires(::cordo_internal_literal::as_index_t.parse<C...>().valid)
+  requires(::cordo_internal_cstring::as_index_t.parse<C...>().valid)
 {
   constexpr auto VALUE =
-      ::cordo_internal_literal::as_index_t.parse<C...>().value;
+      ::cordo_internal_cstring::as_index_t.parse<C...>().value;
   return ::cordo::make_key<VALUE>{};
 }
 
-template <::cordo_internal_literal::cstring L>
+template <::cordo::cstring L>
 constexpr auto operator""_key() noexcept {
   return ::cordo::make_key<L>{};
 }

@@ -201,6 +201,7 @@ using ::cordo_internal_meta::same_constness_as_t;
 using ::cordo_internal_meta::tag_t;
 using ::cordo_internal_meta::typeid_t;
 using ::cordo_internal_meta::types_t;
+using ::cordo_internal_meta::null_t;
 using ::cordo_internal_meta::value_t;
 using ::cordo_internal_meta::values_t;
 inline constexpr ::cordo_internal_meta::make_li_t make_li{};
