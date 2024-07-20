@@ -42,7 +42,7 @@ struct is_unique_impl_marker_t<V> : base_tag_t<V> {};
 
 template <typename V, typename... Vs>
 struct is_unique_impl_marker_t<V, Vs...> : base_tag_t<V>,
-                                      is_unique_impl_marker_t<Vs...> {};
+                                           is_unique_impl_marker_t<Vs...> {};
 
 class is_unique_impl final {
   template <typename... Vs>
@@ -145,6 +145,11 @@ struct meta_t final {
     return unlift_v(
         filter(types_t<std::conditional_t<Fn{}(T), value_t<T>, null_t>...>{}));
   }
+
+  template <typename... T>
+  constexpr auto unique(types_t<T...>) const noexcept {
+    return is_unique_impl{}(overload_prio_t<1>{}, tag_t<T>{}...);
+  }
 };
 
 template <typename T>
@@ -196,12 +201,12 @@ struct li_push_t final {
 
 namespace cordo {
 using ::cordo_internal_meta::li_t;
+using ::cordo_internal_meta::null_t;
 using ::cordo_internal_meta::overload_prio_t;
 using ::cordo_internal_meta::same_constness_as_t;
 using ::cordo_internal_meta::tag_t;
 using ::cordo_internal_meta::typeid_t;
 using ::cordo_internal_meta::types_t;
-using ::cordo_internal_meta::null_t;
 using ::cordo_internal_meta::value_t;
 using ::cordo_internal_meta::values_t;
 inline constexpr ::cordo_internal_meta::make_li_t make_li{};

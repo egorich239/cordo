@@ -66,9 +66,14 @@ struct kv_lookup_t final {
 
 inline constexpr struct {
   template <auto V>
-  constexpr auto operator()(::cordo::overload_prio_t<2>,
+  constexpr auto operator()(::cordo::overload_prio_t<3>,
                             ::cordo::value_t<key_t<V>{}>) const noexcept {
     return key_t<V>{};
+  }
+  template <::cordo::null_t V>
+  constexpr auto operator()(::cordo::overload_prio_t<2>,
+                            ::cordo::value_t<V>) const noexcept {
+    return ::cordo::null_t{};
   }
   template <auto V>
   constexpr auto operator()(::cordo::overload_prio_t<1>,

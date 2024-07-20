@@ -39,6 +39,7 @@ struct struct_ final {
        ...));
 
   using t = S;
+  using ref = S&;
 
   using tuple_t = S;
   using fields_t = ::cordo::values_t<Fields...>;

@@ -33,7 +33,33 @@ struct mirror_traits_cpo_t final {
       (mirror_unsupported<T>{}));
 };
 
-struct mirror_traits_subscript_map_cpo_t final {
+struct mirror_traits_name_cpo_t final {
+ private:
+  template <typename T>
+  CORDO_INTERNAL_LAMBDA_(                      //
+      resolve,                                 //
+      (::cordo::overload_prio_t<1>, T) const,  //
+      (typename T::name{}));
+
+  template <typename T>
+  CORDO_INTERNAL_LAMBDA_(                      //
+      resolve,                                 //
+      (::cordo::overload_prio_t<0>, T) const,  //
+      (::cordo::null_t{}));
+
+ public:
+  constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
+    return {};
+  }
+
+  template <typename T>
+  CORDO_INTERNAL_LAMBDA_(  //
+      operator(),          //
+      (T v) const,         //
+      (this->resolve(::cordo::overload_prio_t<1>{}, v)));
+};
+
+struct mirror_traits_subscript_map_keys_cpo_t final {
  private:
   template <typename T>
   CORDO_INTERNAL_LAMBDA_(                      //
@@ -81,6 +107,9 @@ struct mirror_assign_cpo_t final {
       operator(),                            //
       (Traits, T& target, U&& value) const,  //
       (target = (U&&)value));
+
+  template <mirror_traits Traits, typename T, typename U>
+  void operator()(Traits, T&& target, U&& value) const = delete;
 };
 
 struct mirror_subscript_key_cpo_t final {
@@ -95,8 +124,17 @@ struct mirror_subscript_index_cpo_t final {
   }
 };
 
+struct mirror_unwrap_cpo_t final {
+  constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
+    return {};
+  }
+};
+
 using mirror_traits_cpo = ::cordo::cpo_t<mirror_traits_cpo_t{}>;
-using mirror_traits_subscript_map_cpo = ::cordo::cpo_t<mirror_traits_subscript_map_cpo_t{}>;
+
+using mirror_traits_name_cpo = ::cordo::cpo_t<mirror_traits_name_cpo_t{}>;
+using mirror_traits_subscript_keys_cpo =
+    ::cordo::cpo_t<mirror_traits_subscript_map_keys_cpo_t{}>;
 
 using mirror_make_cpo = ::cordo::cpo_t<mirror_make_cpo_t{}>;
 
@@ -104,10 +142,13 @@ using mirror_assign_cpo = ::cordo::cpo_t<mirror_assign_cpo_t{}>;
 using mirror_subscript_key_cpo = ::cordo::cpo_t<mirror_subscript_key_cpo_t{}>;
 using mirror_subscript_index_cpo =
     ::cordo::cpo_t<mirror_subscript_index_cpo_t{}>;
+using mirror_unwrap_cpo = ::cordo::cpo_t<mirror_unwrap_cpo_t{}>;
 
-template <typename T, mirror_traits Traits, typename Fn>
+template <mirror_traits Traits, typename Fn>
 class mirror_t final {
-  T& value_;
+  using T = typename Traits::t;
+  using rep = typename Traits::rep;
+  rep value_;
 
   template <auto K, typename U>
   static CORDO_INTERNAL_LAMBDA_(  //
@@ -124,7 +165,10 @@ class mirror_t final {
                             (K&&)k))));
 
  public:
-  explicit constexpr mirror_t(T& value, Traits, Fn) noexcept : value_{value} {}
+  using traits = Traits;
+
+  explicit constexpr mirror_t(rep&& value, Traits, Fn) noexcept
+      : value_{(rep&&)value} {}
 
   constexpr const T& v() const noexcept { return value_; }
   constexpr T& v() noexcept { return value_; }
@@ -133,8 +177,8 @@ class mirror_t final {
   CORDO_INTERNAL_LAMBDA_(  //
       operator=,           //
       (U&& v),             //
-      (((void)::cordo::invoke(mirror_assign_cpo{}, Traits{}, this->value_,
-                              (U&&)v)),
+      (((void)::cordo::invoke(mirror_assign_cpo{}, Traits{},
+                              (rep&&)this->value_, (U&&)v)),
        *this));
 
   template <typename K>
@@ -151,6 +195,8 @@ class mirror_t final {
       (mirror_t::subscript(::cordo::overload_prio_t<1>{}, Traits{},
                            this->value_, (K&&)k)));
 };
+template <typename Traits, typename Fn>
+mirror_t(typename Traits::rep&&, Traits, Fn) -> mirror_t<Traits, Fn>;
 
 struct mirror_fn final {
   template <typename T>
@@ -158,7 +204,7 @@ struct mirror_fn final {
       t,                          //
       (::cordo::tag_t<T>) const,  //
       (::cordo::invoke(mirror_traits_cpo{},
-                       ::cordo::tag_t<std::remove_cvref_t<T>>{})));
+                       ::cordo::tag_t<std::remove_reference_t<T>>{})));
 
   template <typename T>
   CORDO_INTERNAL_LAMBDA_(  //
@@ -177,13 +223,15 @@ struct mirror_fn final {
 
 namespace cordo {
 using ::cordo_internal_mirror::mirror_traits_cpo;
-using ::cordo_internal_mirror::mirror_traits_subscript_map_cpo;
+using ::cordo_internal_mirror::mirror_traits_name_cpo;
+using ::cordo_internal_mirror::mirror_traits_subscript_map_keys_cpo_t;
 
 using ::cordo_internal_mirror::mirror_make_cpo;
 
 using ::cordo_internal_mirror::mirror_assign_cpo;
 using ::cordo_internal_mirror::mirror_subscript_index_cpo;
 using ::cordo_internal_mirror::mirror_subscript_key_cpo;
+using ::cordo_internal_mirror::mirror_unwrap_cpo;
 
 inline constexpr ::cordo_internal_mirror::mirror_fn mirror{};
 }  // namespace cordo

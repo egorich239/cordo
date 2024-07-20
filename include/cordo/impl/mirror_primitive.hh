@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bit>
 #include <climits>
 #include <concepts>
 #include <cstddef>
@@ -30,16 +29,16 @@ inline constexpr struct mirror_primitive_name_t {
 
  public:
   constexpr auto operator()(::cordo::tag_t<bool>) const noexcept {
-    return "bool";
+    return ::cordo::cstring("bool");
   }
   constexpr auto operator()(::cordo::tag_t<char>) const noexcept {
-    return "char";
+    return ::cordo::cstring("char");
   }
   constexpr auto operator()(::cordo::tag_t<float>) const noexcept {
-    return "f32";
+    return ::cordo::cstring("f32");
   }
   constexpr auto operator()(::cordo::tag_t<double>) const noexcept {
-    return "f64";
+    return ::cordo::cstring("f64");
   }
   template <std::integral T>
   constexpr auto operator()(::cordo::tag_t<T>) const noexcept {
@@ -57,12 +56,13 @@ inline constexpr struct mirror_primitive_name_t {
 template <primitive T>
 struct mirror_primitive final {
   using t = T;
+  using rep = T&;
   using name = std::conditional_t<
       !std::is_same_v<decltype(mirror_primitive_name(::cordo::tag_t<T>{})),
                       ::cordo::null_t>,
       cordo::make_key<mirror_primitive_name(::cordo::tag_t<T>{})>,
       ::cordo::null_t>;
-  using subscript_map = ::cordo::null_t;
+  using subscript_keys = ::cordo::null_t;
 };
 
 static_assert(std::is_same_v<typename mirror_primitive<int>::name,

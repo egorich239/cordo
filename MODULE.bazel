@@ -2,6 +2,7 @@
 cordo
 """
 
+bazel_dep(name = "googletest", version = "1.15.0")
 bazel_dep(name = "llvm-project", version = "17.0.3")
 
 # Hedron's Compile Commands Extractor for Bazel
