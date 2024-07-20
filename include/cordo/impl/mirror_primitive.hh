@@ -61,7 +61,8 @@ struct mirror_primitive final {
       !std::is_same_v<decltype(mirror_primitive_name(::cordo::tag_t<T>{})),
                       ::cordo::null_t>,
       cordo::make_key<mirror_primitive_name(::cordo::tag_t<T>{})>,
-      ::cordo_internal_meta::null_t>;
+      ::cordo::null_t>;
+  using subscript_map = ::cordo::null_t;
 };
 
 static_assert(std::is_same_v<typename mirror_primitive<int>::name,
