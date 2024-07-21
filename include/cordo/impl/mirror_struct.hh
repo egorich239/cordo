@@ -23,7 +23,6 @@ inline constexpr struct {
     static_assert(::cordo::meta.unique(result));
     return result;
   }
-
 } mirror_struct_eval_keys{};
 
 template <typename T, typename Map>
@@ -39,14 +38,26 @@ struct mirror_struct final {
   using subscript_keys = decltype(mirror_struct_eval_keys(Map{}));
 };
 
+struct mirror_struct_access_t final {
+  using adl_tag = ::cordo_internal_cpo::adl_tag;
+
+  template <typename T, typename F>
+  constexpr auto operator()(T& s, F T::*f) const noexcept -> decltype(s.*f) {
+    return s.*f;
+  }
+};
+inline constexpr ::cordo::algo<mirror_struct_access_t> mirror_struct_access;
 }  // namespace cordo_internal_mirror
+
+namespace cordo {
+using ::cordo_internal_mirror::mirror_struct_access;
+}  // namespace cordo
 
 namespace cordo_internal_cpo {
 
 template <typename T, typename Traits, auto K>
 constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag,
                          Traits, T& s, ::cordo::key_t<K> k)
-    /* TODO: re-introduce accessors */
-    CORDO_INTERNAL_ALIAS_(
-        s.*(::cordo::kv_lookup(typename Traits::subscript_map{}, k)));
+    CORDO_INTERNAL_ALIAS_(::cordo::mirror_struct_access(
+        s, ::cordo::kv_lookup(typename Traits::subscript_map{}, k)));
 }  // namespace cordo_internal_cpo
