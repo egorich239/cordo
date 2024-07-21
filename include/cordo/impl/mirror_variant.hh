@@ -109,6 +109,14 @@ constexpr auto customize(
   return ::cordo_internal_mirror::mirror_option<decltype(opt), decltype(opt)>{};
 }
 
-
+template <typename T, typename Options, auto K>
+constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag,
+                         cordo_internal_mirror::mirror_variant<T, Options> t,
+                         T& s, ::cordo::key_t<K> k)
+    CORDO_INTERNAL_ALIAS_(
+        ::cordo_internal_mirror::mirror_variant_option<
+            decltype(t),
+            ::cordo::kv_lookup(typename decltype(t)::subscript_map{},
+                               decltype(k){})>{s});
 
 }  // namespace cordo_internal_cpo

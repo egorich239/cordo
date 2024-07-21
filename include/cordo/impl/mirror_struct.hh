@@ -55,9 +55,10 @@ using ::cordo_internal_mirror::mirror_struct_access;
 
 namespace cordo_internal_cpo {
 
-template <typename T, typename Traits, auto K>
+template <typename T, typename Map, auto K>
 constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag,
-                         Traits, T& s, ::cordo::key_t<K> k)
+                         ::cordo_internal_mirror::mirror_struct<T, Map> t, T& s,
+                         ::cordo::key_t<K> k)
     CORDO_INTERNAL_ALIAS_(::cordo::mirror_struct_access(
-        s, ::cordo::kv_lookup(typename Traits::subscript_map{}, k)));
+        s, ::cordo::kv_lookup(typename decltype(t)::subscript_map{}, k)));
 }  // namespace cordo_internal_cpo
