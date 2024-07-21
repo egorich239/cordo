@@ -35,23 +35,21 @@ constexpr auto customize(decltype(::cordo::mirror_unwrap), adl_tag,
 template <typename T>
 constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,
                          adl_tag, ::cordo_internal_mirror::mirror_option<T> t)
-    CORDO_INTERNAL_ALIAS_(algo(::cordo::mirror.t(
-        ::cordo::tag_t<decltype(::cordo::mirror_unwrap(
-            t, std::declval<  //
-                   typename ::cordo_internal_mirror::mirror_option<
-                       T>::rep>()))>{})));
+    CORDO_INTERNAL_ALIAS_(algo(::cordo::mirror.traits(::cordo::mirror_unwrap(
+        t, std::declval<
+               typename ::cordo_internal_mirror::mirror_option<T>::rep>()))));
 
 template <typename T, auto K>
 constexpr auto customize(decltype(::cordo::mirror_subscript_key) algo, adl_tag,
                          ::cordo_internal_mirror::mirror_option<T> t, T& s,
                          ::cordo::key_t<K> k)
     CORDO_INTERNAL_ALIAS_(
-        /* TODO: this is unwrap-wrap-unwrap is lame */ ::cordo::mirror(
+        /* TODO: this unwrap-wrap-unwrap is lame */ ::cordo::mirror(
             ::cordo::mirror_unwrap(t, s))[k]
             .v());
 
 template <typename T>
-constexpr auto cordo_cpo(::cordo::mirror_traits_cpo, adl_tag,
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,
                          ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
   return ::cordo_internal_mirror::mirror_option<std::unique_ptr<T>>{};
 }

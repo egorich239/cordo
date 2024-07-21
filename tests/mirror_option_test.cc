@@ -17,7 +17,7 @@ struct Li final {
 using Li_map =
     ::cordo::values_t<("head"_key <= &Li::head), ("tail"_key <= &Li::tail)>;
 
-constexpr auto cordo_cpo(::cordo::mirror_traits_cpo,
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Li>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<Li, Li_map>{};
 }

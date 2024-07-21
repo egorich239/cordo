@@ -73,7 +73,7 @@ static_assert(std::is_same_v<typename mirror_primitive<int>::name,
 namespace cordo_internal_cpo {
 
 template <::cordo_internal_mirror::primitive T>
-constexpr auto cordo_cpo(::cordo::mirror_traits_cpo, adl_tag,
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,
                          ::cordo::tag_t<T>) noexcept {
   return ::cordo_internal_mirror::mirror_primitive<T>{};
 }

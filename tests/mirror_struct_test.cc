@@ -24,7 +24,7 @@ using SomeStruct_map = ::cordo::values_t<  //
     ("y"_key <= &SomeStruct::y),           //
     ("z"_key <= &SomeStruct::z)>;
 
-constexpr auto cordo_cpo(::cordo::mirror_traits_cpo,
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<SomeStruct>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<SomeStruct, SomeStruct_map>{};
 }

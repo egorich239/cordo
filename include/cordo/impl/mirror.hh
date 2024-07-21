@@ -21,16 +21,16 @@ struct mirror_unsupported final {
   using t = T;
 };
 
-struct mirror_traits_cpo_t final {
-  constexpr ::cordo_internal_cpo::adl_tag adl_tag() const noexcept {
-    return {};
-  }
+struct mirror_traits_ctor_t final {
+  using adl_tag = ::cordo_internal_cpo::adl_tag;
 
+  // The idea of unsupported type is to simplify codegens for structs:
+  // every field will get a trait, worst case it will be unsupported.
+  // This however still allows us to later filter them with cordo::skip().
   template <typename T>
-  CORDO_INTERNAL_LAMBDA_(         //
-      operator(),                 //
-      (::cordo::tag_t<T>) const,  //
-      (mirror_unsupported<T>{}));
+  constexpr auto operator()(::cordo::tag_t<T>) const noexcept {
+    return mirror_unsupported<T>{};
+  }
 };
 
 struct mirror_traits_name_cpo_t final {
@@ -120,7 +120,7 @@ struct mirror_unwrap_t final {
 };
 inline constexpr ::cordo::algo<mirror_unwrap_t> mirror_unwrap;
 
-using mirror_traits_cpo = ::cordo::cpo_t<mirror_traits_cpo_t{}>;
+inline constexpr ::cordo::algo<mirror_traits_ctor_t> mirror_traits_ctor;
 
 using mirror_traits_name_cpo = ::cordo::cpo_t<mirror_traits_name_cpo_t{}>;
 
@@ -191,11 +191,9 @@ mirror_t(typename Traits::rep&&, Traits, Fn) -> mirror_t<Traits, Fn>;
 
 struct mirror_fn final {
   template <typename T>
-  CORDO_INTERNAL_LAMBDA_(         //
-      t,                          //
-      (::cordo::tag_t<T>) const,  //
-      (::cordo::invoke(mirror_traits_cpo{},
-                       ::cordo::tag_t<std::remove_reference_t<T>>{})));
+  constexpr auto t(::cordo::tag_t<T>) const
+      CORDO_INTERNAL_ALIAS_(mirror_traits_ctor(::cordo::tag_t<T>{}));
+
   template <typename T>
   constexpr auto traits(T&) const
       CORDO_INTERNAL_ALIAS_(this->t(::cordo::tag_t<T>{}));
@@ -216,7 +214,7 @@ struct mirror_fn final {
 }  // namespace cordo_internal_mirror
 
 namespace cordo {
-using ::cordo_internal_mirror::mirror_traits_cpo;
+using ::cordo_internal_mirror::mirror_traits_ctor;
 using ::cordo_internal_mirror::mirror_traits_name_cpo;
 using ::cordo_internal_mirror::mirror_traits_subscript_keys;
 
