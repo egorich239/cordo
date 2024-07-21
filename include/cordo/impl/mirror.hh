@@ -192,17 +192,15 @@ mirror_t(typename Traits::rep&&, Traits, Fn) -> mirror_t<Traits, Fn>;
 struct mirror_fn final {
   template <typename T>
   constexpr auto t(::cordo::tag_t<T>) const
-      CORDO_INTERNAL_ALIAS_(mirror_traits_ctor(::cordo::tag_t<T>{}));
+      CORDO_INTERNAL_RETURN_(mirror_traits_ctor(::cordo::tag_t<T>{}));
 
   template <typename T>
   constexpr auto traits(T&) const
-      CORDO_INTERNAL_ALIAS_(this->t(::cordo::tag_t<T>{}));
+      CORDO_INTERNAL_RETURN_(this->t(::cordo::tag_t<T>{}));
 
   template <typename T>
-  CORDO_INTERNAL_LAMBDA_(  //
-      operator(),          //
-      (T& v) const,        //
-      (mirror_t(v, this->t(::cordo::tag_t<T>{}), *this)));
+  constexpr auto operator()(T& v) const
+      CORDO_INTERNAL_RETURN_(mirror_t(v, this->traits(v), *this));
 
   template <typename T, typename... Args>
   CORDO_INTERNAL_LAMBDA_(      //

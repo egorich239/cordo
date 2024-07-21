@@ -37,18 +37,29 @@ inline constexpr struct {
  private:
   template <auto... K, size_t... Idx>
   constexpr auto eval(::cordo::types_t<::cordo::key_t<K>...>,
-                      std::integer_sequence<size_t, Idx...>) const noexcept {
-    return ::cordo::values_t<(::cordo::key_t<K>{} <=
-                              ::cordo::value_t<Idx>{})...>{};
+                      std::integer_sequence<size_t, Idx...>) const noexcept
+    requires(sizeof...(K) == sizeof...(Idx))
+  {
+    return ::cordo::values_t<(::cordo::key_t<K>{} <= Idx)...>{};
+  }
+  template <auto... K, size_t... Idx>
+  constexpr auto eval(::cordo::types_t<::cordo::key_t<K>...>,
+                      std::integer_sequence<size_t, Idx...>) const noexcept
+    requires(sizeof...(K) != sizeof...(Idx))
+  {
+    CORDO_INTERNAL_DIAG_(
+        "number of Options must match the number of variant branches");
   }
 
  public:
   template <typename V, auto... Ks>
-  constexpr auto operator()(::cordo::tag_t<V>, ::cordo::value_t<Ks...>) const
-      CORDO_INTERNAL_ALIAS_(
-          this->eval(::cordo::types_t<decltype(Ks)...>{},
-                     std::make_index_sequence<
-                         mirror_variant_size(::cordo::tag_t<V>{})>{}));
+  constexpr auto operator()(::cordo::tag_t<V>,
+                            ::cordo::values_t<Ks...>) const noexcept {
+    return this->eval(
+        ::cordo::types_t<std::remove_const_t<decltype(Ks)>...>{},
+        std::make_index_sequence<mirror_variant_size(::cordo::tag_t<V>{})>{});
+  }
+
 } mirror_variant_make_options{};
 
 template <typename T, typename Options>
@@ -57,7 +68,8 @@ struct mirror_variant final {
   using rep = T&;
 
   using name = ::cordo::null_t;
-  using subscript_map = decltype(mirror_variant_make_options(Options{}));
+  using subscript_map =
+      decltype(mirror_variant_make_options(::cordo::tag_t<T>{}, Options{}));
   using subscript_keys =
       decltype(::cordo_internal_mirror::mirror_struct_eval_keys(
           subscript_map{}));
@@ -110,10 +122,11 @@ constexpr auto customize(
 }
 
 template <typename T, typename Options, auto K>
-constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag,
-                         cordo_internal_mirror::mirror_variant<T, Options> t,
-                         T& s, ::cordo::key_t<K> k)
-    CORDO_INTERNAL_ALIAS_(
+constexpr decltype(auto) customize(
+    decltype(::cordo::mirror_subscript_key), adl_tag,
+    cordo_internal_mirror::mirror_variant<T, Options> t, T& s,
+    ::cordo::key_t<K> k)
+    CORDO_INTERNAL_RETURN_(
         ::cordo_internal_mirror::mirror_variant_option<
             decltype(t),
             ::cordo::kv_lookup(typename decltype(t)::subscript_map{},

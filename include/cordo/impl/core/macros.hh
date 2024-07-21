@@ -9,6 +9,10 @@
   }                                                        \
   static_assert(true)
 
+#define CORDO_INTERNAL_RETURN_(...)                       \
+  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; } \
+  static_assert(true)
+
 #define CORDO_INTERNAL_LAMBDA_R_(name, args, body, reqs)                    \
   constexpr auto name args noexcept(noexcept(CORDO_INTERNAL_INLINE_(body))) \
       ->decltype(CORDO_INTERNAL_INLINE_(body)) reqs {                       \
