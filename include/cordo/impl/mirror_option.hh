@@ -15,10 +15,10 @@
 
 namespace cordo_internal_mirror {
 
-template <typename T>
+template <typename T, typename Rep = T&>
 struct mirror_option final {
   using t = T;
-  using rep = T&;
+  using rep = Rep;
 
   using name = ::cordo::null_t;
 };
@@ -27,21 +27,22 @@ struct mirror_option final {
 
 namespace cordo_internal_cpo {
 
-template <typename T>
+template <typename T, typename Rep>
 constexpr auto customize(decltype(::cordo::mirror_unwrap), adl_tag,
-                         ::cordo_internal_mirror::mirror_option<T>, T& opt)
-    CORDO_INTERNAL_ALIAS_(*opt);
+                         ::cordo_internal_mirror::mirror_option<T, Rep>,
+                         Rep&& opt) CORDO_INTERNAL_ALIAS_(*opt);
 
-template <typename T>
+template <typename T, typename Rep>
 constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,
-                         adl_tag, ::cordo_internal_mirror::mirror_option<T> t)
+                         adl_tag,
+                         ::cordo_internal_mirror::mirror_option<T, Rep> t)
     CORDO_INTERNAL_ALIAS_(algo(::cordo::mirror.traits(::cordo::mirror_unwrap(
-        t, std::declval<
-               typename ::cordo_internal_mirror::mirror_option<T>::rep>()))));
+        t, std::declval<typename ::cordo_internal_mirror::mirror_option<
+               T, Rep>::rep&&>()))));
 
-template <typename T, auto K>
+template <typename T, typename Rep, auto K>
 constexpr auto customize(decltype(::cordo::mirror_subscript_key) algo, adl_tag,
-                         ::cordo_internal_mirror::mirror_option<T> t, T& s,
+                         ::cordo_internal_mirror::mirror_option<T, Rep> t, T& s,
                          ::cordo::key_t<K> k)
     CORDO_INTERNAL_ALIAS_(
         /* TODO: this unwrap-wrap-unwrap is lame */ ::cordo::mirror(
