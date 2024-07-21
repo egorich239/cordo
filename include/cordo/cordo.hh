@@ -8,6 +8,8 @@
 #include "cordo/impl/field.hh"
 #include "cordo/impl/get.hh"
 #include "cordo/impl/mirror.hh"
+#include "cordo/impl/mirror_option.hh"
 #include "cordo/impl/mirror_primitive.hh"
+#include "cordo/impl/mirror_struct.hh"
 #include "cordo/impl/property.hh"
 #include "cordo/impl/struct.hh"

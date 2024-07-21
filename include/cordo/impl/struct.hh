@@ -78,12 +78,10 @@ using ::cordo_internal_struct::struct_;
 namespace cordo_internal_cpo {
 
 template <::cordo_internal_struct::struct_meta M, typename S, auto K>
-CORDO_INTERNAL_LAMBDA_(  //
-    cordo_cpo,           //
-    (::cordo::mirror_subscript_key_cpo, adl_tag, M, S& s,
-     ::cordo::key_t<K> k),  //
-    (::cordo::get(
+constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag, M,
+                         S& s, ::cordo::key_t<K> k)
+    CORDO_INTERNAL_ALIAS_(::cordo::get(
         ::cordo::make_accessor(::cordo::kv_lookup(typename M::fields_t{}, k)),
-        s)));
+        s));
 
 }

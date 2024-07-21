@@ -4,6 +4,7 @@
 #include <climits>
 #include <concepts>
 #include <cstddef>
+#include <memory>
 #include <type_traits>
 
 #include "cordo/impl/core/cpo.hh"
@@ -14,10 +15,10 @@
 
 namespace cordo_internal_mirror {
 
-template <typename T, typename I>
+template <typename T>
 struct mirror_option final {
   using t = T;
-  using inner_t = I;
+  using rep = T&;
 
   using name = ::cordo::null_t;
 };
@@ -26,20 +27,33 @@ struct mirror_option final {
 
 namespace cordo_internal_cpo {
 
-template <typename T, typename I>
-CORDO_INTERNAL_LAMBDA_(  //
-    cordo_cpo,           //
-    (::cordo::mirror_traits_subscript_keys_cpo c, adl_tag t,
-     ::cordo_internal_mirror::mirror_option<T, I>),  //
-    (::cordo::invoke(                                //
-        c, t,                                        //
-        ::cordo::mirror.t(::cordo::tag_t<I>{}))));
+template <typename T>
+constexpr auto customize(decltype(::cordo::mirror_unwrap), adl_tag,
+                         ::cordo_internal_mirror::mirror_option<T>, T& opt)
+    CORDO_INTERNAL_ALIAS_(*opt);
 
-// template <typename T, typename Traits, auto K>
+template <typename T>
+constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,
+                         adl_tag, ::cordo_internal_mirror::mirror_option<T> t)
+    CORDO_INTERNAL_ALIAS_(algo(::cordo::mirror.t(
+        ::cordo::tag_t<decltype(::cordo::mirror_unwrap(
+            t, std::declval<  //
+                   typename ::cordo_internal_mirror::mirror_option<
+                       T>::rep>()))>{})));
 
-//     cordo_cpo,           //
-//     (::cordo::mirror_subscript_key_cpo, adl_tag, Traits, T& s,
-//      ::cordo::key_t<K> k),  //
+template <typename T, auto K>
+constexpr auto customize(decltype(::cordo::mirror_subscript_key) algo, adl_tag,
+                         ::cordo_internal_mirror::mirror_option<T> t, T& s,
+                         ::cordo::key_t<K> k)
+    CORDO_INTERNAL_ALIAS_(
+        /* TODO: this is unwrap-wrap-unwrap is lame */ ::cordo::mirror(
+            ::cordo::mirror_unwrap(t, s))[k]
+            .v());
 
-
+template <typename T>
+constexpr auto cordo_cpo(::cordo::mirror_traits_cpo, adl_tag,
+                         ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
+  return ::cordo_internal_mirror::mirror_option<std::unique_ptr<T>>{};
 }
+
+}  // namespace cordo_internal_cpo

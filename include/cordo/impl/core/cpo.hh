@@ -9,6 +9,9 @@ namespace cordo_internal_cpo_core {
 template <auto A>
 struct cpo_t final {};
 
+template <typename A>
+struct algo;
+
 struct invoke_t final {
  private:
   template <auto A, typename... Args>
@@ -28,15 +31,49 @@ struct invoke_t final {
       (::cordo::overload_prio_t<1>, cpo_t<A>, Args &&...args) const,
       (A((Args &&)args...)));
 
+  template <typename A, typename... Args>
+  constexpr auto resolve(::cordo::overload_prio_t<3>, const algo<A> &a,
+                         Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
+  template <typename A, typename... Args>
+  constexpr auto resolve(::cordo::overload_prio_t<2>, const algo<A> &a,
+                         Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(customize(a, typename A::adl_tag{},
+                                      (Args &&)args...));
+  template <typename A, typename... Args>
+  constexpr auto resolve(::cordo::overload_prio_t<1>, const algo<A> &a,
+                         Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(A{}((Args &&)args...));
+
  public:
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
       operator(), (cpo_t<A> a, Args &&...args) const,
       (this->resolve(::cordo::overload_prio_t<4>{}, a, (Args &&)args...)));
+
+  template <typename A, typename... Args>
+  constexpr auto operator()(const algo<A> &a, Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
+                                          (Args &&)args...));
 };
+
+template <typename A>
+struct algo final {
+  static_assert(((void)A{}, true),
+                "algorithm traits must be constexpr-constructible");
+
+  template <typename... Args>
+  constexpr auto operator()(Args &&...args) const  //
+      CORDO_INTERNAL_ALIAS_(
+          ::cordo_internal_cpo_core::invoke_t{}(*this, (Args &&)args...));
+
+//   auto operator()(...) const = delete;
+};
+
 }  // namespace cordo_internal_cpo_core
 
 namespace cordo {
+using ::cordo_internal_cpo_core::algo;
 using ::cordo_internal_cpo_core::cpo_t;
 inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
 }  // namespace cordo

@@ -44,13 +44,9 @@ struct mirror_struct final {
 namespace cordo_internal_cpo {
 
 template <typename T, typename Traits, auto K>
-CORDO_INTERNAL_LAMBDA_(  //
-    cordo_cpo,           //
-    (::cordo::mirror_subscript_key_cpo, adl_tag, Traits, T& s,
-     ::cordo::key_t<K> k),  //
-    (/* TODO: simplify accessors */ ::cordo::get(
-        ::cordo::make_accessor(
-            ::cordo::kv_lookup(typename Traits::subscript_map{}, k)),
-        s)));
-
-}
+constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag,
+                         Traits, T& s, ::cordo::key_t<K> k)
+    /* TODO: re-introduce accessors */
+    CORDO_INTERNAL_ALIAS_(
+        s.*(::cordo::kv_lookup(typename Traits::subscript_map{}, k)));
+}  // namespace cordo_internal_cpo
