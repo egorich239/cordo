@@ -25,7 +25,7 @@ using SomeStruct_map = ::cordo::values_t<  //
     ("z"_key <= &SomeStruct::z)>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
-                         ::cordo::tag_t<SomeStruct>) noexcept {
+                         ::cordo::tag_t<SomeStruct&>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<SomeStruct, SomeStruct_map>{};
 }
 };  // namespace cordo_internal_test
@@ -74,7 +74,7 @@ consteval void mirror_struct_subscipt_map_test() {
 consteval void mirror_struct_cpo_test() {
   using m = ::cordo_internal_mirror::mirror_struct<SomeStruct, SomeStruct_map>;
   static_assert(std::is_same_v<m, decltype(::cordo::mirror.t(
-                                      ::cordo::tag_t<SomeStruct>{}))>);
+                                      ::cordo::tag_t<SomeStruct&>{}))>);
 }
 
 TEST(MirrorStruct, Basic) {

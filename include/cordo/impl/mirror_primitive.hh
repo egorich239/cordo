@@ -74,7 +74,7 @@ namespace cordo_internal_cpo {
 
 template <::cordo_internal_mirror::primitive T>
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,
-                         ::cordo::tag_t<T>) noexcept {
+                         ::cordo::tag_t<T&>) noexcept {
   return ::cordo_internal_mirror::mirror_primitive<T>{};
 }
 

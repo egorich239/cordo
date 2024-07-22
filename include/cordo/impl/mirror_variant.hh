@@ -117,8 +117,10 @@ constexpr auto customize(decltype(::cordo::mirror_variant_index), adl_tag,
 template <typename Traits, size_t I>
 constexpr auto customize(
     decltype(::cordo::mirror_traits_ctor), adl_tag,
-    ::cordo_internal_mirror::mirror_variant_option<Traits, I> opt) noexcept {
-  return ::cordo_internal_mirror::mirror_option<decltype(opt), decltype(opt)>{};
+    ::cordo::tag_t<
+        ::cordo_internal_mirror::mirror_variant_option<Traits, I>>) noexcept {
+  using Opt = ::cordo_internal_mirror::mirror_variant_option<Traits, I>;
+  return ::cordo_internal_mirror::mirror_option<Opt, Opt>{};
 }
 
 template <typename T, typename Options, auto K>

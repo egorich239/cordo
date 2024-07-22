@@ -70,7 +70,7 @@ struct algo final {
   // TODO: this stop-gap provides some minimum reasonable error-description,
   // and prevents the 1000s lines of gibberish, but maybe we could improve
   // the informativeness of it all?
-  constexpr auto operator()(...) const = delete;
+//   constexpr auto operator()(...) const = delete;
 };
 
 }  // namespace cordo_internal_cpo_core

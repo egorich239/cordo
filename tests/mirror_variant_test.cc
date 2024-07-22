@@ -14,26 +14,48 @@ using namespace ::cordo::literals;
 struct Foo {
   int x;
 };
-using Foo_map = ::cordo::value_t<("x"_key <= &Foo::x)>;
+using Foo_map = ::cordo::values_t<("x"_key <= &Foo::x)>;
 
 struct Bar {
   char y;
 };
-using Bar_map = ::cordo::value_t<("y"_key <= &Bar::y)>;
+using Bar_map = ::cordo::values_t<("y"_key <= &Bar::y)>;
 
 using Var = std::variant<Foo, Bar>;
 using Var_m = ::cordo_internal_mirror::mirror_variant<
     Var, ::cordo::values_t<"Foo"_key, "Bar"_key>>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
-                         ::cordo::tag_t<Var> v) noexcept {
+                         ::cordo::tag_t<Foo&> v) noexcept {
+  return ::cordo_internal_mirror::mirror_struct<Foo, Foo_map>{};
+}
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+                         ::cordo::tag_t<Bar&> v) noexcept {
+  return cordo_internal_mirror::mirror_struct<Bar, Bar_map>{};
+}
+constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+                         ::cordo::tag_t<Var&> v) noexcept {
   return Var_m{};
 }
 
 TEST(Variant, Basic) {
   Var x = Foo{.x = 1};
   auto m = cordo::mirror(x);
-  //   int uy =  m["Foo"_key];
+  auto mt = cordo::mirror.traits(x);
+
+  static_assert(std::is_same_v<decltype(mt)::subscript_map,
+                               ::cordo::values_t<("Foo"_key <= (size_t)0),
+                                                 ("Bar"_key <= (size_t)1)>>);
+  auto mfoo = m["Foo"_key];
+  static_assert(std::is_same_v<decltype(::cordo::mirror_traits_subscript_keys(
+                                   decltype(mfoo)::traits{})),
+                               cordo::types_t<decltype("x"_key)>>);
+mfoo.unwrap();
+  // auto mfoo_unwrap =
+  //     customize(cordo::mirror_unwrap, cordo_internal_cpo::adl_tag{},
+  //               typename decltype(mfoo)::traits{}, mfoo);
+  // mfoo["x"_key];
+  // EXPECT_THAT(mfoo["x"_key].v(), ::testing::Ref(std::get<Foo>(x).x));
 }
 
 }  // namespace

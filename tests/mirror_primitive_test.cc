@@ -22,7 +22,7 @@ consteval void mirror_primitive_name_test() {
   static_assert(
       std::is_same_v<  //
           decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{},
-                                   ::cordo::mirror.t(::cordo::tag_t<bool>{}))),
+                                   ::cordo::mirror.t(::cordo::tag_t<bool&>{}))),
           make_key<"bool"_cs>>);
 
   static_assert(std::is_same_v<  //
@@ -44,22 +44,22 @@ consteval void mirror_primitive_name_test() {
 
 consteval void mirror_primitive_cpo_test() {
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<char>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<char&>{})),
                 ::cordo_internal_mirror::mirror_primitive<char>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<bool>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<bool&>{})),
                 ::cordo_internal_mirror::mirror_primitive<bool>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<float>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<float&>{})),
                 ::cordo_internal_mirror::mirror_primitive<float>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<double>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<double&>{})),
                 ::cordo_internal_mirror::mirror_primitive<double>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<int>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<int&>{})),
                 ::cordo_internal_mirror::mirror_primitive<int>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<unsigned>{})),
+                decltype(::cordo::mirror.t(::cordo::tag_t<unsigned&>{})),
                 ::cordo_internal_mirror::mirror_primitive<unsigned>>);
 }
 

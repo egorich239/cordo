@@ -18,7 +18,7 @@ using Li_map =
     ::cordo::values_t<("head"_key <= &Li::head), ("tail"_key <= &Li::tail)>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
-                         ::cordo::tag_t<Li>) noexcept {
+                         ::cordo::tag_t<Li&>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<Li, Li_map>{};
 }
 
@@ -34,6 +34,7 @@ TEST(Optional, UniquePtrOfStruct) {
   auto m = ::cordo::mirror(x);
   Li& s = ::cordo::mirror_unwrap(::cordo::mirror.traits(x), x);
   EXPECT_THAT(s, ::testing::Ref(*x));
+  EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 
   auto ms = ::cordo::mirror(s);
   EXPECT_THAT(ms["head"_key].v(), ::testing::Ref(x->head));
@@ -58,15 +59,5 @@ TEST(Optional, UniquePtrOfStruct) {
   EXPECT_THAT(m["head"_key].v(), 2);
   EXPECT_THAT(m["tail"_key]["head"_key].v(), 3);
 }
-
-// TEST(Optional, List) {
-//   Li l;
-//   l.head = 1;
-//   l.tail = std::make_unique<Li>(Li{.head = 2, .tail = nullptr});
-
-//   auto m = ::cordo::mirror(l);
-//   EXPECT_THAT(m["head"_key].v(), 1);
-//   EXPECT_THAT(m["tail"_key]["head"_key].v(), 2);
-// }
 
 }  // namespace
