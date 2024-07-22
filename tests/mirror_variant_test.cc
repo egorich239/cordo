@@ -50,12 +50,7 @@ TEST(Variant, Basic) {
   static_assert(std::is_same_v<decltype(::cordo::mirror_traits_subscript_keys(
                                    decltype(mfoo)::traits{})),
                                cordo::types_t<decltype("x"_key)>>);
-mfoo.unwrap();
-  // auto mfoo_unwrap =
-  //     customize(cordo::mirror_unwrap, cordo_internal_cpo::adl_tag{},
-  //               typename decltype(mfoo)::traits{}, mfoo);
-  // mfoo["x"_key];
-  // EXPECT_THAT(mfoo["x"_key].v(), ::testing::Ref(std::get<Foo>(x).x));
+  EXPECT_THAT(mfoo["x"_key].v(), ::testing::Ref(std::get<Foo>(x).x));
 }
 
 }  // namespace

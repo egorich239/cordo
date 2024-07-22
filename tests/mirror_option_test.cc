@@ -25,14 +25,13 @@ constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
 TEST(Optional, UniquePtr) {
   std::unique_ptr<int> x = std::make_unique<int>(2);
   auto m = ::cordo::mirror(x);
-  EXPECT_THAT(::cordo::mirror_unwrap(typename decltype(m)::traits{}, x),
-              ::testing::Ref(*x));
+  EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 }
 
 TEST(Optional, UniquePtrOfStruct) {
   std::unique_ptr<Li> x = std::make_unique<Li>(Li{.head = 2, .tail = nullptr});
   auto m = ::cordo::mirror(x);
-  Li& s = ::cordo::mirror_unwrap(::cordo::mirror.traits(x), x);
+  Li& s = m.unwrap().v();
   EXPECT_THAT(s, ::testing::Ref(*x));
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 
@@ -44,12 +43,6 @@ TEST(Optional, UniquePtrOfStruct) {
                 decltype(::cordo::mirror_traits_subscript_keys(
                     typename decltype(m)::traits{})),
                 ::cordo::types_t<decltype("head"_key), decltype("tail"_key)>>);
-  EXPECT_THAT(
-      ::cordo::mirror_subscript_key(::cordo::mirror.traits(x), x, "head"_key),
-      ::testing::Ref(x->head));
-  EXPECT_THAT(
-      ::cordo::mirror_subscript_key(::cordo::mirror.traits(x), x, "tail"_key),
-      ::testing::Ref(x->tail));
   EXPECT_THAT(m["head"_key].v(), ::testing::Ref(x->head));
   EXPECT_THAT(m["tail"_key].v(), ::testing::Ref(x->tail));
   EXPECT_THAT(m["tail"_key].v(), ::testing::Eq(nullptr));

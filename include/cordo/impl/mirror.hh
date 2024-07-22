@@ -136,6 +136,8 @@ using mirror_subscript_index_cpo =
 
 template <mirror_traits Traits, typename M>
 struct mirror_ref final {
+  using traits = Traits;
+
   M* mirror;
 
   constexpr M& operator*() const noexcept { return *mirror; }
@@ -150,17 +152,23 @@ class mirror_t final {
   using rep = typename Traits::rep;
   rep value_;
 
-  template <auto K, typename U>
-  static constexpr auto subscript(::cordo::overload_prio_t<1>, Traits traits,
-                                  U& value, ::cordo::key_t<K> k)
-      CORDO_INTERNAL_ALIAS_(Fn{}(mirror_subscript_key(Traits{}, value, k)));
+  constexpr auto ref() const noexcept {
+    return mirror_ref<Traits, const mirror_t>{this};
+  }
+  constexpr auto ref() noexcept { return mirror_ref<Traits, mirror_t>{this}; }
 
-  template <typename K, typename U>
-  static CORDO_INTERNAL_LAMBDA_(                                      //
-      subscript,                                                      //
-      (::cordo::overload_prio_t<0>, Traits traits, U& value, K&& k),  //
-      (Fn{}(::cordo::invoke(mirror_subscript_index_cpo{}, Traits{}, value,
-                            (K&&)k))));
+  template <auto K, typename R>
+  static constexpr auto subscript(::cordo::overload_prio_t<1>, R ref,
+                                  ::cordo::key_t<K> k)
+      CORDO_INTERNAL_ALIAS_(Fn{}(mirror_subscript_key(ref, k)));
+
+  // TODO: inspirational goal
+  // template <typename K, typename U>
+  // static CORDO_INTERNAL_LAMBDA_(                                      //
+  //     subscript,                                                      //
+  //     (::cordo::overload_prio_t<0>, Traits traits, U& value, K&& k),  //
+  //     (Fn{}(::cordo::invoke(mirror_subscript_index_cpo{}, Traits{}, value,
+  //                           (K&&)k))));
 
  public:
   using traits = Traits;
@@ -179,12 +187,16 @@ class mirror_t final {
     return value_;
   }
 
-  constexpr decltype(auto) unwrap() noexcept(
-      noexcept(Fn{}(mirror_unwrap(Traits{}, (rep&&)this->value_))))
-    requires(sizeof(decltype(mirror_unwrap(Traits{},
-                                           (rep &&) this -> value_))) >= 1)
-  {
-    return Fn{}(mirror_unwrap(Traits{}, (rep&&)this->value_));
+  template <typename R = mirror_ref<Traits, mirror_t>,
+            typename = decltype(mirror_unwrap(std::declval<R>()))>
+  constexpr auto unwrap() noexcept(noexcept(Fn{}(mirror_unwrap(this->ref())))) {
+    return Fn{}(mirror_unwrap(this->ref()));
+  }
+  template <typename R = mirror_ref<Traits, const mirror_t>,
+            typename = decltype(mirror_unwrap(std::declval<R>()))>
+  constexpr auto unwrap() const
+      noexcept(noexcept(Fn{}(mirror_unwrap(this->ref())))) {
+    return Fn{}(mirror_unwrap(this->ref()));
   }
 
   template <typename U>
@@ -198,14 +210,12 @@ class mirror_t final {
   template <typename K>
   constexpr auto operator[](K&& k) const
       CORDO_INTERNAL_ALIAS_(mirror_t::subscript(::cordo::overload_prio_t<1>{},
-                                                Traits{}, this->value_,
-                                                (K&&)k));
+                                                this->ref(), (K&&)k));
 
   template <typename K>
   constexpr auto operator[](K&& k)
       CORDO_INTERNAL_ALIAS_(mirror_t::subscript(::cordo::overload_prio_t<1>{},
-                                                Traits{}, this->value_,
-                                                (K&&)k));
+                                                this->ref(), (K&&)k));
 
  private:
   friend class mirror_ref<traits, mirror_t>;
@@ -227,6 +237,10 @@ struct mirror_fn final {
   constexpr auto operator()(T&& v) const
       CORDO_INTERNAL_RETURN_(mirror_t((T&&)v, this->traits((T&&)v), *this));
 
+  template <typename Traits>
+  constexpr auto operator()(mirror_t<Traits, mirror_fn>&& v) const
+      CORDO_INTERNAL_RETURN_((mirror_t<Traits, mirror_fn>&&)v);
+
   template <typename T, typename... Args>
   CORDO_INTERNAL_LAMBDA_(      //
       make,                    //
@@ -237,6 +251,8 @@ struct mirror_fn final {
 }  // namespace cordo_internal_mirror
 
 namespace cordo {
+using ::cordo_internal_mirror::mirror_ref;
+
 using ::cordo_internal_mirror::mirror_traits_ctor;
 using ::cordo_internal_mirror::mirror_traits_name_cpo;
 using ::cordo_internal_mirror::mirror_traits_subscript_keys;
