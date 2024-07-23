@@ -18,7 +18,7 @@ using Li_map =
     ::cordo::values_t<("head"_key <= &Li::head), ("tail"_key <= &Li::tail)>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
-                         ::cordo::tag_t<Li&>) noexcept {
+                         ::cordo::tag_t<Li>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<Li, Li_map>{};
 }
 
@@ -35,10 +35,6 @@ TEST(Optional, UniquePtrOfStruct) {
   EXPECT_THAT(s, ::testing::Ref(*x));
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 
-  cordo::mirror_api ms = ::cordo::mirror(s);
-  EXPECT_THAT(ms["head"_key].v(), ::testing::Ref(x->head));
-  EXPECT_THAT(ms["tail"_key].v(), ::testing::Ref(x->tail));
-
   static_assert(std::is_same_v<
                 decltype(::cordo::mirror_traits_subscript_keys(
                     typename decltype(m)::traits{})),
@@ -51,6 +47,13 @@ TEST(Optional, UniquePtrOfStruct) {
   EXPECT_THAT(x->tail, ::testing::Pointee(::testing::Field(&Li::head, 3)));
   EXPECT_THAT(m["head"_key].v(), 2);
   EXPECT_THAT(m["tail"_key]["head"_key].v(), 3);
+
+  const auto& y = x;
+  cordo::mirror_api my = ::cordo::mirror(y);
+  EXPECT_THAT(my.unwrap().v(), ::testing::Ref(*y));
+  EXPECT_THAT(my["head"_key].v(), ::testing::Ref(x->head));
+  EXPECT_THAT(my["tail"_key].v(), ::testing::Ref(x->tail));
+  EXPECT_THAT(my["tail"_key]["head"_key].v(), 3);
 }
 
 }  // namespace

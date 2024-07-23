@@ -25,7 +25,7 @@ using SomeStruct_map = ::cordo::values_t<  //
     ("z"_key <= &SomeStruct::z)>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
-                         ::cordo::tag_t<SomeStruct&>) noexcept {
+                         ::cordo::tag_t<SomeStruct>) noexcept {
   return ::cordo_internal_mirror::mirror_struct<SomeStruct, SomeStruct_map>{};
 }
 };  // namespace cordo_internal_test
@@ -77,7 +77,7 @@ consteval void mirror_struct_cpo_test() {
                                       ::cordo::tag_t<SomeStruct&>{}))>);
 }
 
-TEST(MirrorStruct, Basic) {
+TEST(MirrorStruct, Mut) {
   SomeStruct f{
       .x = 3,
       .y = .14,
@@ -92,6 +92,24 @@ TEST(MirrorStruct, Basic) {
 
   static_assert(std::is_same_v<typename decltype(mf["x"_key])::traits,
                                ::cordo_internal_mirror::mirror_primitive<int>>);
+}
+
+TEST(MirrorStruct, Const) {
+  const SomeStruct f{
+      .x = 3,
+      .y = .14,
+      .z = '1',
+  };
+
+  cordo::mirror_api mf = ::cordo::mirror(f);
+  EXPECT_THAT(mf.v(), ::testing::Ref(f));
+  EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
+  EXPECT_THAT(mf["y"_key].v(), ::testing::Ref(f.y));
+  EXPECT_THAT(mf["z"_key].v(), ::testing::Ref(f.z));
+
+  static_assert(
+      std::is_same_v<typename decltype(mf["x"_key])::traits,
+                     ::cordo_internal_mirror::mirror_primitive<const int>>);
 }
 
 }  // namespace

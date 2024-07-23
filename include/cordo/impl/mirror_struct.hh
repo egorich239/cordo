@@ -46,6 +46,12 @@ struct mirror_struct_access_t final {
                             F T::*f) const noexcept -> decltype(s.*f) {
     return s.*f;
   }
+  template <typename T, typename F>
+  constexpr auto operator()(const ::cordo::algo<mirror_struct_access_t>&,
+                            const T& s,
+                            F T::*f) const noexcept -> decltype(s.*f) {
+    return s.*f;
+  }
 };
 inline constexpr ::cordo::algo<mirror_struct_access_t> mirror_struct_access;
 }  // namespace cordo_internal_mirror
@@ -65,4 +71,12 @@ constexpr decltype(auto) customize(
         ref.rep(),
         ::cordo::kv_lookup(typename decltype(ref)::traits::subscript_map{},
                            k))));
+
+template <typename T, typename Map>
+constexpr auto customize(
+    decltype(::cordo::mirror_traits_of_const), adl_tag,
+    ::cordo_internal_mirror::mirror_struct<T, Map>) noexcept {
+  return ::cordo_internal_mirror::mirror_struct<const T, Map>{};
+}
+
 }  // namespace cordo_internal_cpo

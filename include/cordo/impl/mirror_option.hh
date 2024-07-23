@@ -49,8 +49,15 @@ constexpr decltype(auto) customize(
 
 template <typename T>
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,
-                         ::cordo::tag_t<std::unique_ptr<T>&>) noexcept {
+                         ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
   return ::cordo_internal_mirror::mirror_option<std::unique_ptr<T>, T&>{};
+}
+
+template <typename T, typename I>
+constexpr auto customize(
+    decltype(::cordo::mirror_traits_of_const), adl_tag,
+    ::cordo_internal_mirror::mirror_option<T, I, T&>) noexcept {
+  return ::cordo_internal_mirror::mirror_option<const T, const I, const T&>{};
 }
 
 }  // namespace cordo_internal_cpo

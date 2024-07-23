@@ -21,6 +21,11 @@ struct mirror_unsupported final {
   using t = T;
 };
 
+struct mirror_traits_of_const_t {
+  using adl_tag = ::cordo_internal_cpo::adl_tag;
+};
+inline constexpr ::cordo::algo<mirror_traits_of_const_t> mirror_traits_of_const;
+
 struct mirror_traits_ctor_t final {
   using adl_tag = ::cordo_internal_cpo::adl_tag;
 
@@ -32,6 +37,21 @@ struct mirror_traits_ctor_t final {
                             ::cordo::tag_t<T>) const noexcept {
     return mirror_unsupported<T>{};
   }
+
+  template <typename T>
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
+                            ::cordo::tag_t<T&>) const
+      CORDO_INTERNAL_ALIAS_(algo(::cordo::tag_t<T>{}));
+
+  template <typename T>
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
+                            ::cordo::tag_t<const T>) const
+      CORDO_INTERNAL_ALIAS_(mirror_traits_of_const(algo(::cordo::tag_t<T>{})));
+
+  // TODO: mirror_copy
+  template <typename T>
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
+                            ::cordo::tag_t<T&&>) const noexcept = delete;
 };
 
 struct mirror_traits_name_t final {
@@ -138,8 +158,7 @@ class mirror_api final {
  public:
   using traits = Traits;
 
-  explicit constexpr mirror_api(rep&& value, Traits) noexcept
-      : value_{(rep&&)value} {}
+  explicit constexpr mirror_api(rep&& value) noexcept : value_{(rep&&)value} {}
 
   constexpr const T& v() const noexcept
     requires(std::is_same_v<T&, rep>)
@@ -181,8 +200,6 @@ class mirror_api final {
   friend class mirror_ref<traits, mirror_api>;
   friend class mirror_ref<traits, const mirror_api>;
 };
-template <typename Traits>
-mirror_api(typename Traits::rep&&, Traits) -> mirror_api<Traits>;
 
 struct mirror_fn final {
   template <typename T>
@@ -191,11 +208,12 @@ struct mirror_fn final {
 
   template <typename T>
   constexpr auto traits(T&&) const
-      CORDO_INTERNAL_RETURN_(this->t(::cordo::tag_t<T>{}));
+      CORDO_INTERNAL_RETURN_(this->t(::cordo::tag_t<T&&>{}));
 
   template <typename T>
   constexpr auto operator()(T&& v) const
-      CORDO_INTERNAL_RETURN_(mirror_api((T&&)v, this->traits((T&&)v)));
+      CORDO_INTERNAL_RETURN_(mirror_api<decltype(this->traits((T&&)v))>(
+          typename decltype(this->traits((T&&)v))::rep((T&&)v)));
 };
 }  // namespace cordo_internal_mirror
 
@@ -205,6 +223,7 @@ using ::cordo_internal_mirror::mirror_ref;
 
 using ::cordo_internal_mirror::mirror_traits_ctor;
 using ::cordo_internal_mirror::mirror_traits_name;
+using ::cordo_internal_mirror::mirror_traits_of_const;
 using ::cordo_internal_mirror::mirror_traits_subscript_keys;
 
 using ::cordo_internal_mirror::mirror_assign;
