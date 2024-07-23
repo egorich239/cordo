@@ -56,6 +56,16 @@ TEST(Variant, Basic) {
   cordo::mirror_api my = cordo::mirror(y);
   EXPECT_THAT(my["Foo"_key].unwrap().v(), ::testing::Ref(std::get<Foo>(y)));
   EXPECT_THAT(my["Foo"_key]["x"_key].v(), ::testing::Ref(std::get<Foo>(y).x));
+
+  mfoo = Foo{.x = 4};
+  EXPECT_THAT(my["Foo"_key]["x"_key].v(), 4);
+
+  x = Bar{.y = 5};
+  EXPECT_THAT(my["Bar"_key]["y"_key].v(), 5);
+
+  mfoo = Foo{.x = 6};
+  EXPECT_THAT(std::get<Foo>(x).x, 6);
+  EXPECT_THAT(my["Foo"_key]["x"_key].v(), 6);
 }
 
 }  // namespace

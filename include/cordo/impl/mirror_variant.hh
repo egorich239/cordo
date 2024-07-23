@@ -84,6 +84,14 @@ struct mirror_variant_option final {
   constexpr decltype(auto) operator*() const {
     return std::get<I>(this->variant_);
   }
+  template <typename U>
+  constexpr auto operator=(U&& v) noexcept(
+      noexcept(this->variant_ = std::remove_reference_t<F>{(U&&)v}))
+      -> decltype(this->variant_ = std::remove_reference_t<F>{(U&&)v})
+    requires(std::is_constructible_v<std::remove_reference_t<F>, U &&>)
+  {
+    return this->variant_ = std::remove_reference_t<F>{(U&&)v};
+  }
 };
 
 }  // namespace cordo_internal_mirror
