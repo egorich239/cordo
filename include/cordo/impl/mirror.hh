@@ -16,6 +16,18 @@ concept mirror_traits = requires {
   requires !std::is_reference_v<typename Traits::t>;
 };
 
+template <mirror_traits Traits, typename M>
+struct mirror_ref final {
+  using traits = Traits;
+
+  M* mirror;
+
+  constexpr M& operator*() const noexcept { return *mirror; }
+  constexpr M* operator->() const noexcept { return mirror; }
+
+  constexpr decltype(auto) rep() const noexcept { return mirror->value_; }
+};
+
 template <typename T>
 struct mirror_unsupported final {
   using t = T;
@@ -48,7 +60,7 @@ struct mirror_traits_ctor_t final {
                             ::cordo::tag_t<const T>) const
       CORDO_INTERNAL_ALIAS_(mirror_traits_of_const(algo(::cordo::tag_t<T>{})));
 
-  // TODO: mirror_copy
+  // TODO: mirror_inlined?
   template <typename T>
   constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
                             ::cordo::tag_t<T&&>) const noexcept = delete;
@@ -98,14 +110,11 @@ struct mirror_traits_subscript_keys_t final {
 struct mirror_assign_t final {
   using adl_tag = ::cordo_internal_cpo::adl_tag;
 
-  template <mirror_traits Traits, typename T, typename U>
+  template <mirror_traits Traits, typename M, typename U>
   constexpr decltype(auto) operator()(const ::cordo::algo<mirror_assign_t>&,
-                                      Traits, T& target, U&& value) const
-      CORDO_INTERNAL_RETURN_(target = (U&&)value);
-
-  template <mirror_traits Traits, typename T, typename U>
-  void operator()(const ::cordo::algo<mirror_assign_t>&, Traits, T&& target,
-                  U&& value) const = delete;
+                                      mirror_ref<Traits, M> ref,
+                                      U&& value) const
+      CORDO_INTERNAL_RETURN_(ref.rep() = (U&&)value);
 };
 
 struct mirror_subscript_key_t final {
@@ -124,18 +133,6 @@ inline constexpr ::cordo::algo<mirror_traits_subscript_keys_t>
 inline constexpr ::cordo::algo<mirror_assign_t> mirror_assign;
 inline constexpr ::cordo::algo<mirror_subscript_key_t> mirror_subscript_key;
 inline constexpr ::cordo::algo<mirror_unwrap_t> mirror_unwrap;
-
-template <mirror_traits Traits, typename M>
-struct mirror_ref final {
-  using traits = Traits;
-
-  M* mirror;
-
-  constexpr M& operator*() const noexcept { return *mirror; }
-  constexpr M* operator->() const noexcept { return mirror; }
-
-  constexpr decltype(auto) rep() const noexcept { return mirror->value_; }
-};
 
 template <mirror_traits Traits>
 class mirror_api final {
@@ -183,8 +180,8 @@ class mirror_api final {
   }
 
   template <typename U>
-  constexpr auto operator=(U&& v) CORDO_INTERNAL_ALIAS_(
-      ((void)mirror_assign(Traits{}, (rep&&)this->value_, (U&&)v)), *this);
+  constexpr auto operator=(U&& v)
+      CORDO_INTERNAL_ALIAS_(((void)mirror_assign(this->ref(), (U&&)v)), *this);
 
   template <typename K>
   constexpr auto operator[](K&& k) const

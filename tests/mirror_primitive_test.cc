@@ -69,6 +69,9 @@ TEST(MirrorPrimitive, Basic) {
 
   const int cx = 3;
   EXPECT_THAT(::cordo::mirror(cx).v(), ::testing::Ref(cx));
+
+  // TODO: make it work, it will be useful for e.g. class accessors, returning values.
+  // auto m = ::cordo::mirror(3);
 }
 
 }  // namespace
