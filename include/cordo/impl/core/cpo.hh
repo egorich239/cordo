@@ -43,7 +43,7 @@ struct invoke_t final {
   template <typename A, typename... Args>
   constexpr auto resolve(::cordo::overload_prio_t<1>, const algo<A> &a,
                          Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(A{}((Args &&)args...));
+      CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
 
  public:
   template <auto A, typename... Args>

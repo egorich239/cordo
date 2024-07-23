@@ -14,7 +14,10 @@ struct adl_tag {};
 }  // namespace n1
 
 struct algo1_traits {
-  constexpr auto operator()(std::string_view) const { return 1; }
+  constexpr auto operator()(const cordo::algo<algo1_traits>&,
+                            std::string_view) const {
+    return 1;
+  }
 };
 inline constexpr ::cordo::algo<algo1_traits> algo1{};
 

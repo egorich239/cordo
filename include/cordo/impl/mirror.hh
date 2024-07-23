@@ -28,7 +28,8 @@ struct mirror_traits_ctor_t final {
   // every field will get a trait, worst case it will be unsupported.
   // This however still allows us to later filter them with cordo::skip().
   template <typename T>
-  constexpr auto operator()(::cordo::tag_t<T>) const noexcept {
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>&,
+                            ::cordo::tag_t<T>) const noexcept {
     return mirror_unsupported<T>{};
   }
 };
@@ -48,7 +49,8 @@ struct mirror_traits_name_t final {
   using adl_tag = ::cordo_internal_cpo::adl_tag;
 
   template <typename T>
-  constexpr auto operator()(T v) const noexcept {
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_name_t>&,
+                            T v) const noexcept {
     return this->resolve(::cordo::overload_prio_t<1>{}, v);
   }
 };
@@ -68,7 +70,8 @@ struct mirror_traits_subscript_keys_t final {
   using adl_tag = ::cordo_internal_cpo::adl_tag;
 
   template <typename T>
-  constexpr auto operator()(T v) const
+  constexpr auto operator()(
+      const ::cordo::algo<mirror_traits_subscript_keys_t>&, T v) const
       CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<1>{}, v));
 };
 
@@ -76,11 +79,13 @@ struct mirror_assign_t final {
   using adl_tag = ::cordo_internal_cpo::adl_tag;
 
   template <mirror_traits Traits, typename T, typename U>
-  constexpr decltype(auto) operator()(Traits, T& target, U&& value) const
+  constexpr decltype(auto) operator()(const ::cordo::algo<mirror_assign_t>&,
+                                      Traits, T& target, U&& value) const
       CORDO_INTERNAL_RETURN_(target = (U&&)value);
 
   template <mirror_traits Traits, typename T, typename U>
-  void operator()(Traits, T&& target, U&& value) const = delete;
+  void operator()(const ::cordo::algo<mirror_assign_t>&, Traits, T&& target,
+                  U&& value) const = delete;
 };
 
 struct mirror_subscript_key_t final {
