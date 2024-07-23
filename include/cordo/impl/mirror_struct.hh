@@ -60,8 +60,8 @@ constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key), adl_tag,
     ::cordo::mirror_ref<::cordo_internal_mirror::mirror_struct<T, Map>, M> ref,
     ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(::cordo::mirror_struct_access(
+    CORDO_INTERNAL_RETURN_(::cordo::mirror(::cordo::mirror_struct_access(
         ref.rep(),
         ::cordo::kv_lookup(typename decltype(ref)::traits::subscript_map{},
-                           k)));
+                           k))));
 }  // namespace cordo_internal_cpo

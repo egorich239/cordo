@@ -24,18 +24,18 @@ constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
 
 TEST(Optional, UniquePtr) {
   std::unique_ptr<int> x = std::make_unique<int>(2);
-  auto m = ::cordo::mirror(x);
+  cordo::mirror_api m = ::cordo::mirror(x);
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 }
 
 TEST(Optional, UniquePtrOfStruct) {
   std::unique_ptr<Li> x = std::make_unique<Li>(Li{.head = 2, .tail = nullptr});
-  auto m = ::cordo::mirror(x);
+  cordo::mirror_api m = ::cordo::mirror(x);
   Li& s = m.unwrap().v();
   EXPECT_THAT(s, ::testing::Ref(*x));
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 
-  auto ms = ::cordo::mirror(s);
+  cordo::mirror_api ms = ::cordo::mirror(s);
   EXPECT_THAT(ms["head"_key].v(), ::testing::Ref(x->head));
   EXPECT_THAT(ms["tail"_key].v(), ::testing::Ref(x->tail));
 

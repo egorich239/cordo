@@ -32,7 +32,7 @@ template <typename T, typename I, typename Rep, typename M>
 constexpr auto customize(
     decltype(::cordo::mirror_unwrap), adl_tag,
     ::cordo::mirror_ref<::cordo_internal_mirror::mirror_option<T, I, Rep>, M>
-        ref) CORDO_INTERNAL_ALIAS_(*ref.rep());
+        ref) CORDO_INTERNAL_ALIAS_(::cordo::mirror(*ref.rep()));
 
 template <typename T, typename I, typename Rep>
 constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,

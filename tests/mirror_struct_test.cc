@@ -84,7 +84,7 @@ TEST(MirrorStruct, Basic) {
       .z = '1',
   };
 
-  auto mf = ::cordo::mirror(f);
+  cordo::mirror_api mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
   EXPECT_THAT(mf["y"_key].v(), ::testing::Ref(f.y));

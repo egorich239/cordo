@@ -40,13 +40,13 @@ constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
 
 TEST(Variant, Basic) {
   Var x = Foo{.x = 1};
-  auto m = cordo::mirror(x);
+  cordo::mirror_api m = cordo::mirror(x);
   auto mt = cordo::mirror.traits(x);
 
   static_assert(std::is_same_v<decltype(mt)::subscript_map,
                                ::cordo::values_t<("Foo"_key <= (size_t)0),
                                                  ("Bar"_key <= (size_t)1)>>);
-  auto mfoo = m["Foo"_key];
+  cordo::mirror_api mfoo = m["Foo"_key];
   static_assert(std::is_same_v<decltype(::cordo::mirror_traits_subscript_keys(
                                    decltype(mfoo)::traits{})),
                                cordo::types_t<decltype("x"_key)>>);

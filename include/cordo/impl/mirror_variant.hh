@@ -145,7 +145,8 @@ constexpr decltype(auto) customize(
       ::cordo::kv_lookup(typename traits::subscript_map{}, decltype(k){});
   using F = decltype(cordo_internal_mirror::mirror_variant_get(
       ref.rep(), ::cordo::value_t<Idx>{}));
-  return ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
-      ref.rep()};
+  return ::cordo::mirror(
+      ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
+          ref.rep()});
 }
 }  // namespace cordo_internal_cpo

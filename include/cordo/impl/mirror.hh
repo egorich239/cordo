@@ -112,7 +112,7 @@ struct mirror_ref final {
   constexpr decltype(auto) rep() const noexcept { return mirror->value_; }
 };
 
-template <mirror_traits Traits, typename Fn>
+template <mirror_traits Traits>
 class mirror_api final {
   using T = typename Traits::t;
   using rep = typename Traits::rep;
@@ -124,16 +124,16 @@ class mirror_api final {
   constexpr auto ref() noexcept { return mirror_ref<Traits, mirror_api>{this}; }
 
   template <auto K, typename R>
-  static constexpr auto subscript(::cordo::overload_prio_t<1>, R ref,
-                                  ::cordo::key_t<K> k)
-      CORDO_INTERNAL_ALIAS_(Fn{}(mirror_subscript_key(ref, k)));
+  static constexpr decltype(auto) subscript(::cordo::overload_prio_t<1>, R ref,
+                                            ::cordo::key_t<K> k)
+      CORDO_INTERNAL_RETURN_(mirror_subscript_key(ref, k));
 
   // TODO: inspirational goal: subscript(non-key-index)
 
  public:
   using traits = Traits;
 
-  explicit constexpr mirror_api(rep&& value, Traits, Fn) noexcept
+  explicit constexpr mirror_api(rep&& value, Traits) noexcept
       : value_{(rep&&)value} {}
 
   constexpr const T& v() const noexcept
@@ -149,14 +149,13 @@ class mirror_api final {
 
   template <typename..., typename R = mirror_ref<Traits, mirror_api>,
             typename = decltype(mirror_unwrap(std::declval<R>()))>
-  constexpr auto unwrap() noexcept(noexcept(Fn{}(mirror_unwrap(this->ref())))) {
-    return Fn{}(mirror_unwrap(this->ref()));
+  constexpr auto unwrap() noexcept(noexcept(mirror_unwrap(this->ref()))) {
+    return mirror_unwrap(this->ref());
   }
   template <typename..., typename R = mirror_ref<Traits, const mirror_api>,
             typename = decltype(mirror_unwrap(std::declval<R>()))>
-  constexpr auto unwrap() const
-      noexcept(noexcept(Fn{}(mirror_unwrap(this->ref())))) {
-    return Fn{}(mirror_unwrap(this->ref()));
+  constexpr auto unwrap() const noexcept(noexcept(mirror_unwrap(this->ref()))) {
+    return mirror_unwrap(this->ref());
   }
 
   template <typename U>
@@ -177,8 +176,8 @@ class mirror_api final {
   friend class mirror_ref<traits, mirror_api>;
   friend class mirror_ref<traits, const mirror_api>;
 };
-template <typename Traits, typename Fn>
-mirror_api(typename Traits::rep&&, Traits, Fn) -> mirror_api<Traits, Fn>;
+template <typename Traits>
+mirror_api(typename Traits::rep&&, Traits) -> mirror_api<Traits>;
 
 struct mirror_fn final {
   template <typename T>
@@ -191,15 +190,12 @@ struct mirror_fn final {
 
   template <typename T>
   constexpr auto operator()(T&& v) const
-      CORDO_INTERNAL_RETURN_(mirror_api((T&&)v, this->traits((T&&)v), *this));
-
-  template <typename Traits>
-  constexpr auto operator()(mirror_api<Traits, mirror_fn>&& v) const
-      CORDO_INTERNAL_RETURN_((mirror_api<Traits, mirror_fn>&&)v);
+      CORDO_INTERNAL_RETURN_(mirror_api((T&&)v, this->traits((T&&)v)));
 };
 }  // namespace cordo_internal_mirror
 
 namespace cordo {
+using ::cordo_internal_mirror::mirror_api;
 using ::cordo_internal_mirror::mirror_ref;
 
 using ::cordo_internal_mirror::mirror_traits_ctor;
