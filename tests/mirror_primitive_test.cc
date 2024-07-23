@@ -15,15 +15,13 @@ consteval void mirror_primitive_name_test() {
                 ::cordo_internal_mirror::mirror_primitive<bool>::name,
                 make_key<cstring("bool")>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::invoke(
-                    ::cordo::mirror_traits_name_cpo{},
+                decltype(::cordo::mirror_traits_name(
                     ::cordo_internal_mirror::mirror_primitive<bool>{})),
                 make_key<"bool"_cs>>);
-  static_assert(
-      std::is_same_v<  //
-          decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{},
-                                   ::cordo::mirror.t(::cordo::tag_t<bool&>{}))),
-          make_key<"bool"_cs>>);
+  static_assert(std::is_same_v<  //
+                decltype(::cordo::mirror_traits_name(
+                    ::cordo::mirror.t(::cordo::tag_t<bool&>{}))),
+                make_key<"bool"_cs>>);
 
   static_assert(std::is_same_v<  //
                 ::cordo_internal_mirror::mirror_primitive<char>::name,

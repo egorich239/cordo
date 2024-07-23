@@ -26,33 +26,25 @@ struct NamedTrait_no {};
 consteval void mirror_name_test() {
   constexpr NamedTrait_foo nt_foo{};
   static_assert(std::is_same_v<  //
-                decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{},
-                                         NamedTrait_foo{})),
+                decltype(cordo::mirror_traits_name(NamedTrait_foo{})),
                 make_key<"foo"_cs>>);
   static_assert(
       std::is_same_v<  //
-          decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{}, nt_foo)),
-          make_key<"foo"_cs>>);
+          decltype(cordo::mirror_traits_name(nt_foo)), make_key<"foo"_cs>>);
 
   constexpr NamedTrait_null nt_null{};
   static_assert(std::is_same_v<  //
-                decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{},
-                                         NamedTrait_null{})),
+                decltype(cordo::mirror_traits_name(NamedTrait_null{})),
                 ::cordo::null_t>);
-  static_assert(
-      std::is_same_v<  //
-          decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{}, nt_null)),
-          ::cordo::null_t>);
+  static_assert(std::is_same_v<  //
+                decltype(cordo::mirror_traits_name(nt_null)), ::cordo::null_t>);
 
   constexpr NamedTrait_no nt_no{};
   static_assert(std::is_same_v<  //
-                decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{},
-                                         NamedTrait_no{})),
+                decltype(cordo::mirror_traits_name(NamedTrait_no{})),
                 ::cordo::null_t>);
-  static_assert(
-      std::is_same_v<  //
-          decltype(::cordo::invoke(::cordo::mirror_traits_name_cpo{}, nt_no)),
-          ::cordo::null_t>);
+  static_assert(std::is_same_v<  //
+                decltype(cordo::mirror_traits_name(nt_no)), ::cordo::null_t>);
 }
 
 }  // namespace
