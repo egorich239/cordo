@@ -80,6 +80,7 @@ struct mirror_variant_option final {
   using rep = typename Traits::rep;
   rep variant_;
 
+  constexpr explicit operator bool() const noexcept { return this->variant_; }
   constexpr decltype(auto) operator*() { return std::get<I>(this->variant_); }
   constexpr decltype(auto) operator*() const {
     return std::get<I>(this->variant_);
