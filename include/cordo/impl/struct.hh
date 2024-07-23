@@ -83,5 +83,4 @@ constexpr auto customize(decltype(::cordo::mirror_subscript_key), adl_tag, M,
     CORDO_INTERNAL_ALIAS_(::cordo::get(
         ::cordo::make_accessor(::cordo::kv_lookup(typename M::fields_t{}, k)),
         s));
-
 }
