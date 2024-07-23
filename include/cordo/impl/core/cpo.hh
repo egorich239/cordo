@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
@@ -9,15 +10,17 @@
 namespace cordo_internal_cpo_core {
 struct fallible_tag final {};
 
-template <typename T, typename EH>
+template <typename T>
 concept fallible = requires {
   requires std::is_same_v<typename T::tag_t, fallible_tag>;
+
+  typename T::eh_t;
   typename T::ok_t;
   typename T::err_t;
 };
 
 inline constexpr struct {
-  template <typename EH, fallible<EH> F>
+  template <fallible F>
   constexpr auto err1_t(F &&) const noexcept {
     return ::cordo::types_t<typename F::err_t>{};
   }
@@ -27,7 +30,7 @@ inline constexpr struct {
     return ::cordo::types_t<>{};
   }
 
-  template <typename EH, fallible<EH> F>
+  template <fallible F>
   constexpr auto eh1_t(F &&) const noexcept {
     return ::cordo::types_t<typename F::eh_t>{};
   }
@@ -56,9 +59,9 @@ inline constexpr struct {
     return this->common_t(::cordo::meta.concat(this->eh1_t((Args &&)a)...));
   }
 
-  template <typename EH, fallible<EH> F>
+  template <fallible F>
   constexpr decltype(auto) result1(F &&v) const noexcept {
-    return EH::value((F &&)v);
+    return F::eh_t::value((F &&)v);
   }
   template <typename T>
   constexpr decltype(auto) result1(T &&v) const noexcept {
@@ -109,33 +112,35 @@ struct invoke_t final {
   constexpr auto eh_wrapper(cordo::null_t, cordo::null_t, const algo<A> &a,
                             Args &&...args) const
       CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
-                                          (Args &&)args...));
+                                          static_cast<Args &&>(args)...));
 
   template <typename EH, typename E, typename A, typename... Args>
   constexpr auto eh_wrapper(cordo::tag_t<EH>, cordo::tag_t<E>, const algo<A> &a,
                             Args &&...args) const
-      noexcept(noexcept(EH::template make_result<E>(
-          this->eh_wrapper(cordo::null_t{}, cordo::null_t{}, a,
-                           fallible_helpers.result1((Args &&)args)...))))
-          -> decltype(EH::template make_result<E>(
-              this->eh_wrapper(cordo::null_t{}, cordo::null_t{}, a,
-                               fallible_helpers.result1((Args &&)args)...))) {
-    auto err = EH::template err_opt<E>();
+      // TODO: noexcept eval
+      -> decltype(EH::template make_result<E>(this->eh_wrapper(
+          cordo::null_t{}, cordo::null_t{}, a,
+          fallible_helpers.result1(static_cast<Args &&>(args))...)))
+
+  {
+    auto err = EH::template empty_error<E>();
     bool proceed = ([&err]<typename T>(T &&v) {
-      if constexpr (fallible<decltype(v), EH>) {
-        if (!EH::success((T &&)v)) {
-          err = EH::template err_opt<E>(EH::err((T &&)v));
+      if constexpr (fallible<std::remove_cvref_t<decltype(v)>>) {
+        if (!EH::ok((T &&)v)) {
+          err = E{EH::error((T &&)v)};
           return false;
         }
         return true;
       } else {
         return true;
       }
-    }(args) && ...);
-    return proceed ? EH::template make_result<E>(this->eh_wrapper(
-                         cordo::null_t{}, cordo::null_t{}, a,
-                         fallible_helpers.result1((Args &&)args)...))
-                   : err.move();
+    }((Args &&)args) &&
+                    ...);
+    return proceed
+               ? EH::template make_result<E>(this->eh_wrapper(
+                     cordo::null_t{}, cordo::null_t{}, a,
+                     fallible_helpers.result1(static_cast<Args &&>(args))...))
+               : *std::move(err);
   }
 
  public:
@@ -146,8 +151,10 @@ struct invoke_t final {
 
   template <typename A, typename... Args>
   constexpr auto operator()(const algo<A> &a, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
-                                          (Args &&)args...));
+      CORDO_INTERNAL_ALIAS_(this->eh_wrapper(
+          fallible_helpers.eh_t(static_cast<Args &&>(args)...),
+          fallible_helpers.common_err_t(static_cast<Args &&>(args)...), a,
+          static_cast<Args &&>(args)...));
 };
 
 template <typename A>
@@ -171,6 +178,8 @@ struct algo final {
 namespace cordo {
 using ::cordo_internal_cpo_core::algo;
 using ::cordo_internal_cpo_core::cpo_t;
+using ::cordo_internal_cpo_core::fallible;
+using ::cordo_internal_cpo_core::fallible_tag;
 inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
 }  // namespace cordo
 
