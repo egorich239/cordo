@@ -112,15 +112,17 @@ TEST(Algo, Fallible) {
       std::is_same_v<decltype(::cordo_internal_cpo_core::fallible_helpers.eh_t(
                          R{3})),
                      ::cordo::tag_t<failure_eh<result>>>);
-  R x = algo3(R(std::string("wow")));
+  static_assert(cordo::maybe(algo3, 1, 2, 3) == 6);
+
+  R x = cordo::maybe(algo3, R(std::string("wow")));
   ASSERT_THAT(x.state.index(), 1);
   EXPECT_THAT(std::get<1>(x.state), ::testing::StrEq("wow"));
 
-  R y = algo3(R{3}, R{4}, 5);
+  R y = cordo::maybe(algo3, R{3}, R{4}, 5);
   ASSERT_THAT(y.state.index(), 0);
   EXPECT_THAT(std::get<0>(y.state), ::testing::Eq(12));
 
-  R z = algo3(R{3}, R{"woohoo"}, R{4}, 5);
+  R z = cordo::maybe(algo3, R{3}, R{"woohoo"}, R{4}, 5);
   ASSERT_THAT(z.state.index(), 1);
   EXPECT_THAT(std::get<1>(z.state), ::testing::StrEq("woohoo"));
 }

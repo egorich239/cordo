@@ -108,41 +108,6 @@ struct invoke_t final {
                          Args &&...args) const
       CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
 
-  template <typename A, typename... Args>
-  constexpr auto eh_wrapper(cordo::null_t, cordo::null_t, const algo<A> &a,
-                            Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
-                                          static_cast<Args &&>(args)...));
-
-  template <typename EH, typename E, typename A, typename... Args>
-  constexpr auto eh_wrapper(cordo::tag_t<EH>, cordo::tag_t<E>, const algo<A> &a,
-                            Args &&...args) const
-      // TODO: noexcept eval
-      -> decltype(EH::template make_result<E>(this->eh_wrapper(
-          cordo::null_t{}, cordo::null_t{}, a,
-          fallible_helpers.result1(static_cast<Args &&>(args))...)))
-
-  {
-    auto err = EH::template empty_error<E>();
-    bool proceed = ([&err]<typename T>(T &&v) {
-      if constexpr (fallible<std::remove_cvref_t<decltype(v)>>) {
-        if (!EH::ok((T &&)v)) {
-          err = E{EH::error((T &&)v)};
-          return false;
-        }
-        return true;
-      } else {
-        return true;
-      }
-    }((Args &&)args) &&
-                    ...);
-    return proceed
-               ? EH::template make_result<E>(this->eh_wrapper(
-                     cordo::null_t{}, cordo::null_t{}, a,
-                     fallible_helpers.result1(static_cast<Args &&>(args))...))
-               : *std::move(err);
-  }
-
  public:
   template <auto A, typename... Args>
   CORDO_INTERNAL_LAMBDA_(  //
@@ -151,10 +116,8 @@ struct invoke_t final {
 
   template <typename A, typename... Args>
   constexpr auto operator()(const algo<A> &a, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(this->eh_wrapper(
-          fallible_helpers.eh_t(static_cast<Args &&>(args)...),
-          fallible_helpers.common_err_t(static_cast<Args &&>(args)...), a,
-          static_cast<Args &&>(args)...));
+      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
+                                          static_cast<Args &&>(args)...));
 };
 
 template <typename A>
@@ -173,6 +136,48 @@ struct algo final {
   constexpr auto operator()(...) const = delete;
 };
 
+struct maybe_t final {
+ private:
+  template <typename F, typename... Args>
+  constexpr decltype(auto) eh_wrapper(cordo::null_t, cordo::null_t, F &&fn,
+                                      Args &&...args) const
+      CORDO_INTERNAL_RETURN_(fn(static_cast<Args &&>(args)...));
+
+  template <typename EH, typename E, typename F, typename... Args>
+  constexpr auto eh_wrapper(cordo::tag_t<EH>, cordo::tag_t<E>, F &&fn,
+                            Args &&...args) const
+      // TODO: noexcept eval
+      -> decltype(EH::template make_result<E>(this->eh_wrapper(
+          cordo::null_t{}, cordo::null_t{}, (F &&)fn,
+          fallible_helpers.result1(static_cast<Args &&>(args))...))) {
+    auto err = EH::template empty_error<E>();
+    const bool proceed = ([&err]<typename T>(T &&v) {
+      if constexpr (fallible<std::remove_cvref_t<T>>) {
+        if (!EH::ok((T &&)v)) {
+          err = E{EH::error((T &&)v)};
+          return false;
+        }
+        return true;
+      } else {
+        return true;
+      }
+    }((Args &&)args) && ...);
+    return proceed
+               ? EH::template make_result<E>(this->eh_wrapper(
+                     cordo::null_t{}, cordo::null_t{}, (F &&)fn,
+                     fallible_helpers.result1(static_cast<Args &&>(args))...))
+               : *std::move(err);
+  }
+
+ public:
+  template <typename Fn, typename... Args>
+  constexpr decltype(auto) operator()(Fn &&fn, Args &&...args) const
+      CORDO_INTERNAL_RETURN_(this->eh_wrapper(
+          fallible_helpers.eh_t(static_cast<Args &&>(args)...),
+          fallible_helpers.common_err_t(static_cast<Args &&>(args)...),
+          (Fn &&)fn, (Args &&)args...));
+};
+
 }  // namespace cordo_internal_cpo_core
 
 namespace cordo {
@@ -181,6 +186,7 @@ using ::cordo_internal_cpo_core::cpo_t;
 using ::cordo_internal_cpo_core::fallible;
 using ::cordo_internal_cpo_core::fallible_tag;
 inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
+inline constexpr ::cordo_internal_cpo_core::maybe_t maybe{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {
