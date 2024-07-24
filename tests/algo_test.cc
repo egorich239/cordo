@@ -46,6 +46,10 @@ struct algo3_traits {
 };
 inline constexpr ::cordo::algo<algo3_traits> algo3{};
 
+struct Bar {
+  constexpr int bar(int x) const { return x + 4; }
+};
+
 template <template <typename, typename> typename R>
 struct failure_eh final {
   template <cordo::fallible F>
@@ -125,6 +129,12 @@ TEST(Algo, Fallible) {
   R z = cordo::maybe(algo3, R{3}, R{"woohoo"}, R{4}, 5);
   ASSERT_THAT(z.state.index(), 1);
   EXPECT_THAT(std::get<1>(z.state), ::testing::StrEq("woohoo"));
+
+  // Verify that maybe is compatible with anything invocable.
+  static_assert(cordo::maybe(&Bar::bar, Bar{}, 3) == 7);
+  R w = cordo::maybe(&Bar::bar, Bar{}, R{3});
+  ASSERT_THAT(w.state.index(), 0);
+  EXPECT_THAT(std::get<0>(w.state), ::testing::Eq(7));
 }
 
 }  // namespace

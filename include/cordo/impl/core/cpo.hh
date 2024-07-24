@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -138,10 +139,11 @@ struct algo final {
 
 struct maybe_t final {
  private:
-  template <typename F, typename... Args>
-  constexpr decltype(auto) eh_wrapper(cordo::null_t, cordo::null_t, F &&fn,
+  template <typename Fn, typename... Args>
+  constexpr decltype(auto) eh_wrapper(cordo::null_t, cordo::null_t, Fn &&fn,
                                       Args &&...args) const
-      CORDO_INTERNAL_RETURN_(fn(static_cast<Args &&>(args)...));
+      CORDO_INTERNAL_RETURN_(std::invoke((Fn &&)fn,
+                                         static_cast<Args &&>(args)...));
 
   template <typename EH, typename E, typename F, typename... Args>
   constexpr auto eh_wrapper(cordo::tag_t<EH>, cordo::tag_t<E>, F &&fn,
