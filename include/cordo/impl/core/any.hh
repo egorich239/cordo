@@ -6,11 +6,12 @@
 #include <tuple>
 #include <type_traits>
 
-#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/algo.hh"
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_any {
+// TODO: this file is probably broken, shall be adjusted to algo.
 
 struct any_storage_t final {
  public:
@@ -47,7 +48,7 @@ struct any_storage_t final {
     requires(!std::is_reference_v<T> &&
              std::is_same_v<T, std::remove_cvref_t<U>> &&
              std::is_constructible_v<T, U &&> && sizeof(T) <= 24)
-      : storage_{}, typeid_{&decltype(id)::key}, dtor_{} {
+      : storage_{}, dtor_{}, typeid_{&decltype(id)::key} {
     new (storage_) T{(U&&)v};
     dtor_ = +[](void* self) { std::launder((T*)self)->~T(); };
   }

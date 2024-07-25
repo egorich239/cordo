@@ -9,7 +9,7 @@
 #include <utility>
 #include <variant>
 
-#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/algo.hh"
 #include "cordo/impl/core/cstring.hh"
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"

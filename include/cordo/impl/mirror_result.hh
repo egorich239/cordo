@@ -9,7 +9,7 @@
 #include <stdexcept>
 #endif
 
-#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/algo.hh"
 
 namespace mirror_internal_result {
 
