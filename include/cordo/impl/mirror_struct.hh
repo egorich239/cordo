@@ -10,7 +10,6 @@
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"
 #include "cordo/impl/core/reflect.hh"
-#include "cordo/impl/get.hh"
 #include "cordo/impl/mirror.hh"
 
 namespace cordo_internal_mirror {

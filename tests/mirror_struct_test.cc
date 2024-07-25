@@ -3,13 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <cordo/impl/mirror_primitive.hh>
-
 #include "cordo/cordo.hh"
-#include "cordo/impl/core/kv.hh"
-#include "cordo/impl/core/meta.hh"
-#include "cordo/impl/field.hh"
-#include "cordo/impl/mirror.hh"
 
 namespace cordo_internal_test {
 using namespace ::cordo::literals;
