@@ -20,6 +20,14 @@ concept fallible = requires(std::remove_cvref_t<T> v) {
   typename decltype(v)::error_t;
 };
 
+struct infallible_t final {
+  explicit infallible_t() = delete;
+  infallible_t(const infallible_t &) = default;
+  infallible_t(infallible_t &&) = default;
+  infallible_t &operator=(const infallible_t &) = default;
+  infallible_t &operator=(infallible_t &&) = default;
+};
+
 template <typename Fn>
 struct pipe_t final {
  public:
@@ -51,6 +59,15 @@ struct pipe_t final {
 };
 
 struct piped_t final {};
+
+struct piped_fn final {
+  template <typename Fn, typename... Args>
+  constexpr auto operator()(Fn fn, Args &&...args) const {
+    return pipe_t{([fn, ... args = (Args &&)args](auto &&v) {
+      return fn((decltype(v) &&)v, (Args &&)args...);
+    })};
+  }
+};
 
 template <typename A>
 struct algo final {
@@ -88,6 +105,22 @@ struct algo final {
   constexpr auto operator()(...) const = delete;
 };
 
+template <typename EH>
+struct as_fallible_fn final {
+  template <typename..., fallible V>
+  constexpr auto operator()(V v) const
+    requires(
+        std::is_same_v<typename std::remove_cvref_t<decltype(v)>::eh_t, EH>)
+  {
+    return (decltype(v) &&)v;
+  }
+
+  template <typename..., typename T>
+  constexpr auto operator()(T &&v) const {
+    return EH::make_result((T &&)v, cordo::tag_t<infallible_t>{});
+  }
+};
+
 }  // namespace cordo_internal_cpo_core
 
 namespace cordo {
@@ -95,6 +128,9 @@ using ::cordo_internal_cpo_core::algo;
 using ::cordo_internal_cpo_core::fallible;
 using ::cordo_internal_cpo_core::fallible_tag;
 inline constexpr ::cordo_internal_cpo_core::piped_t piped{};
+inline constexpr ::cordo_internal_cpo_core::piped_fn pipedf{};
+template <typename EH>
+inline constexpr ::cordo_internal_cpo_core::as_fallible_fn<EH> as_fallible{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {

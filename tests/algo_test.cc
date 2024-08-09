@@ -105,6 +105,13 @@ consteval void algo_test() {
   static_assert(algo3(1, 2, 3) == 6);
 }
 
+TEST(Algo, AsFallible) {
+  using R = result<int, cordo_internal_cpo_core::infallible_t>;
+  R r = cordo::as_fallible<failure_eh<result>>(3);
+  ASSERT_THAT(r.state.index(), 0);
+  EXPECT_THAT(std::get<0>(r.state), 3);
+}
+
 TEST(Algo, Pipe) {
   static_assert((1 | algo3(cordo::piped, 2, 3)) == 6);
 
@@ -116,6 +123,13 @@ TEST(Algo, Pipe) {
   result = R{6} | algo3(cordo::piped, 2, 3);
   ASSERT_THAT(result.state.index(), 0);
   EXPECT_THAT(std::get<0>(result.state), ::testing::Eq(11));
+}
+
+TEST(Algo, PipedAsFallible) {
+  using R = result<int, cordo_internal_cpo_core::infallible_t>;
+  R r = 3 | cordo::pipedf(cordo::as_fallible<failure_eh<result>>);
+  ASSERT_THAT(r.state.index(), 0);
+  EXPECT_THAT(std::get<0>(r.state), 3);
 }
 
 }  // namespace
