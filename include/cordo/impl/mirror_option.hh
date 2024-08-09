@@ -28,17 +28,17 @@ struct mirror_option final {
 
 namespace cordo_internal_cpo {
 
-template <typename T, typename I, typename Rep>
+template <typename T, typename I, typename EH, typename Rep>
 constexpr auto customize(
     decltype(::cordo::mirror_unwrap), adl_tag,
-    ::cordo::mirror_core<::cordo_internal_mirror::mirror_option<T, I, Rep>>&
+    ::cordo::mirror_core<::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>&
         core) CORDO_INTERNAL_ALIAS_(::cordo::mirror.core(*core.value));
 
-template <typename T, typename I, typename Rep>
+template <typename T, typename I, typename EH, typename Rep>
 constexpr auto customize(
     decltype(::cordo::mirror_unwrap), adl_tag,
     const ::cordo::mirror_core<
-        ::cordo_internal_mirror::mirror_option<T, I, Rep>>& core)
+        ::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>& core)
     CORDO_INTERNAL_ALIAS_(::cordo::mirror.core(*core.value));
 
 template <typename T, typename I, typename Rep>
@@ -47,20 +47,20 @@ constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,
                          ::cordo_internal_mirror::mirror_option<T, I, Rep> t)
     CORDO_INTERNAL_ALIAS_(algo(::cordo::mirror.t(::cordo::tag_t<I>{})));
 
-template <typename T, typename I, typename Rep, auto K>
+template <typename T, typename I, typename Rep, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key) algo, adl_tag,
-    ::cordo::mirror_core<::cordo_internal_mirror::mirror_option<T, I, Rep>>&
+    ::cordo::mirror_core<::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>&
         core,
     ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) |
                            cordo::mirror_subscript_key(cordo::piped, k));
 
-template <typename T, typename I, typename Rep, auto K>
+template <typename T, typename I, typename Rep, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key) algo, adl_tag,
     const ::cordo::mirror_core<
-        ::cordo_internal_mirror::mirror_option<T, I, Rep>>& core,
+        ::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>& core,
     ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) |
                            cordo::mirror_subscript_key(cordo::piped, k));

@@ -131,3 +131,7 @@ struct eh_result final {
 };
 
 }  // namespace mirror_internal_result
+
+namespace cordo {
+using mirror_internal_result::eh_terminate;
+}  // namespace cordo

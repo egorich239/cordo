@@ -113,10 +113,10 @@ constexpr auto customize(
   return ::cordo_internal_mirror::mirror_variant<const T, Options>{};
 }
 
-template <typename T, typename Options, auto K>
+template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key), adl_tag,
-    ::cordo::mirror_core<cordo_internal_mirror::mirror_variant<T, Options>>&
+    ::cordo::mirror_core<cordo_internal_mirror::mirror_variant<T, Options>, EH>&
         core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
@@ -129,11 +129,11 @@ constexpr decltype(auto) customize(
           core.value});
 }
 
-template <typename T, typename Options, auto K>
+template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key), adl_tag,
     const ::cordo::mirror_core<
-        cordo_internal_mirror::mirror_variant<T, Options>>& core,
+        cordo_internal_mirror::mirror_variant<T, Options>, EH>& core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
   constexpr size_t Idx =
