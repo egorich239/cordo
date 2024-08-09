@@ -25,8 +25,8 @@ class mirror_result final {
  public:
   using tag_t = cordo::fallible_tag;
   using eh_t = EH;
-  using ok_t = T;
-  using err_t = mirror_error;
+  using result_t = T;
+  using error_t = mirror_error;
 
   template <typename U>
   constexpr mirror_result(U&& v) noexcept(
@@ -52,98 +52,81 @@ class mirror_result final {
   std::variant<T, mirror_error> state_;
 };
 
-struct eh_terminate final {
-  struct error_t final {
-    template <typename T>
-    [[noreturn]] operator T() {
-      std::terminate();
-    }
-    template <typename U>
-    [[noreturn]] void operator=(U&&) {
-      std::terminate();
-    }
-  };
+struct eh_terminator_t final {
   template <typename T>
-  static constexpr decltype(auto) value(T&& v) noexcept {
-    return (T&&)v;
-  }
-  template <typename T>
-  static constexpr decltype(auto) error(T&&) noexcept {
-    return error_t{};
-  }
-  template <typename T>
-  static constexpr bool ok(T&&) noexcept {
-    return true;
-  }
-  template <typename E>
-  static constexpr auto empty_error() noexcept {
-    return error_t{};
-  }
-  template <typename T>
-  static constexpr auto make_result(T&& v) noexcept {
-    return (T&&)v;
+  [[noreturn]] operator T() {
+    // Hasta la vista!
+    std::terminate();
   }
 };
+
+template <typename H>
+struct eh_stack_unwind final {
+  template <typename T>
+  static constexpr bool has_result(T&&) noexcept {
+    return true;
+  }
+  template <typename T>
+  static constexpr decltype(auto) as_result(T&& v) noexcept {
+    return (T&&)v;
+  }
+  template <typename T>
+  static constexpr auto make_result(T&& v,
+                                    cordo::tag_t<mirror_error>) noexcept {
+    return (T&&)v;
+  }
+  static constexpr eh_terminator_t make_error(mirror_error err) noexcept {
+    return H{};
+  }
+
+  template <typename T>
+  static constexpr decltype(auto) as_error(T&&) noexcept = delete;
+};
+
+using eh_terminate = eh_stack_unwind<eh_terminator_t>;
 
 #if defined(__GNUC__) && !defined(__EXCEPTIONS)
 using eh_throw = eh_terminate;
 #else
-struct eh_throw final {
-  struct error_t final {
-    template <typename T>
-    [[noreturn]] operator T() {
-      throw std::runtime_error("something went wrong");
-    }
-    template <typename U>
-    [[noreturn]] void operator=(U&&) {
-      std::terminate();
-    }
-  };
+
+struct eh_exception_t final {
   template <typename T>
-  static constexpr decltype(auto) value(T&& v) noexcept {
-    return (T&&)v;
-  }
-  template <typename T>
-  static constexpr decltype(auto) error(T&&) noexcept {
-    return error_t{};
-  }
-  template <typename T>
-  static constexpr bool ok(T&&) noexcept {
-    return true;
-  }
-  template <typename E>
-  static constexpr auto empty_error() noexcept {
-    return error_t{};
-  }
-  template <typename T>
-  static constexpr auto make_result(T&& v) noexcept {
-    return (T&&)v;
+  operator T() {
+    // TODO: better details.
+    throw std::runtime_error("something went wrong");
   }
 };
+using eh_throw = eh_stack_unwind<eh_exception_t>;
 #endif
 
 struct eh_result final {
   template <typename T>
-  static constexpr decltype(auto) value(T&& v) noexcept {
-    return ((T&&)v).value();
+  static constexpr bool has_result(mirror_result<eh_result, T>&& v) noexcept {
+    return v.ok();
   }
   template <typename T>
-  static constexpr decltype(auto) error(T&& v) noexcept {
+  static constexpr decltype(auto) as_result(
+      mirror_result<eh_result, T>&& v) noexcept {
+    return std::move(v).value();
+  }
+  template <typename T>
+  static constexpr decltype(auto) as_error(
+      mirror_result<eh_result, T>&& v) noexcept {
     return v.error();
   }
 
   template <typename T>
-  static constexpr bool ok(T&& v) noexcept {
-    return v.ok();
-  }
-
-  template <typename E>
-  static constexpr auto empty_error() noexcept {
-    return mirror_error{};
+  static constexpr auto make_result(mirror_result<eh_result, T>&& v,
+                                    cordo::tag_t<mirror_error>) noexcept {
+    return (T&&)v;
   }
   template <typename T>
-  static constexpr auto make_result(T&& v) noexcept {
-    return mirror_result<eh_result, T>{(T&&)v};
+  static constexpr auto make_result(T&& v,
+                                    cordo::tag_t<mirror_error>) noexcept {
+    return mirror_result<mirror_error, T>{(T&&)v};
+  }
+  static constexpr mirror_error make_error(mirror_error err) noexcept {
+    return err;
   }
 };
 

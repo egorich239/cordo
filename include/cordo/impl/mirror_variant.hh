@@ -113,20 +113,36 @@ constexpr auto customize(
   return ::cordo_internal_mirror::mirror_variant<const T, Options>{};
 }
 
-template <typename T, typename Options, typename M, auto K>
+template <typename T, typename Options, auto K>
 constexpr decltype(auto) customize(
     decltype(::cordo::mirror_subscript_key), adl_tag,
-    ::cordo::mirror_ref<cordo_internal_mirror::mirror_variant<T, Options>, M>
-        ref,
+    ::cordo::mirror_core<cordo_internal_mirror::mirror_variant<T, Options>>&
+        core,
     ::cordo::key_t<K> k) noexcept {
-  using traits = typename decltype(ref)::traits;
+  using traits = decltype(core.traits());
   constexpr size_t Idx =
       ::cordo::kv_lookup(typename traits::subscript_map{}, decltype(k){});
   using F = decltype(cordo_internal_mirror::mirror_variant_get(
-      ref.rep(), ::cordo::value_t<Idx>{}));
-  return ::cordo::mirror(
+      core.value, ::cordo::value_t<Idx>{}));
+  return ::cordo::mirror.core(
       ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
-          ref.rep()});
+          core.value});
+}
+
+template <typename T, typename Options, auto K>
+constexpr decltype(auto) customize(
+    decltype(::cordo::mirror_subscript_key), adl_tag,
+    const ::cordo::mirror_core<
+        cordo_internal_mirror::mirror_variant<T, Options>>& core,
+    ::cordo::key_t<K> k) noexcept {
+  using traits = decltype(core.traits());
+  constexpr size_t Idx =
+      ::cordo::kv_lookup(typename traits::subscript_map{}, decltype(k){});
+  using F = decltype(cordo_internal_mirror::mirror_variant_get(
+      core.value, ::cordo::value_t<Idx>{}));
+  return ::cordo::mirror.core(
+      ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
+          core.value});
 }
 
 // mirror_variant_option

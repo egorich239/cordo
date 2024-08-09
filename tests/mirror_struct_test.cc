@@ -3,6 +3,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <type_traits>
+
 #include "cordo/cordo.hh"
 
 namespace cordo_internal_test {
@@ -80,6 +82,7 @@ TEST(MirrorStruct, Mut) {
 
   cordo::mirror_api mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
+
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
   EXPECT_THAT(mf["y"_key].v(), ::testing::Ref(f.y));
   EXPECT_THAT(mf["z"_key].v(), ::testing::Ref(f.z));

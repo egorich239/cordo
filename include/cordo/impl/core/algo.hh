@@ -12,147 +12,80 @@ namespace cordo_internal_cpo_core {
 struct fallible_tag final {};
 
 template <typename T>
-concept fallible = requires {
-  requires std::is_same_v<typename T::tag_t, fallible_tag>;
+concept fallible = requires(std::remove_cvref_t<T> v) {
+  requires std::is_same_v<typename decltype(v)::tag_t, fallible_tag>;
 
-  typename T::eh_t;
-  typename T::ok_t;
-  typename T::err_t;
+  typename decltype(v)::eh_t;
+  typename decltype(v)::result_t;
+  typename decltype(v)::error_t;
 };
 
-inline constexpr struct {
-  template <fallible F>
-  constexpr auto err1_t(F &&) const noexcept {
-    return ::cordo::types_t<typename F::err_t>{};
-  }
-
-  template <typename T>
-  constexpr auto err1_t(T &&) const noexcept {
-    return ::cordo::types_t<>{};
-  }
-
-  template <fallible F>
-  constexpr auto eh1_t(F &&) const noexcept {
-    return ::cordo::types_t<typename F::eh_t>{};
-  }
-
-  template <typename T>
-  constexpr auto eh1_t(T &&) const noexcept {
-    return ::cordo::types_t<>{};
-  }
-
-  constexpr auto common_t(cordo::types_t<>) const noexcept {
-    return cordo::null_t{};
-  }
-  template <typename... E>
-  constexpr auto common_t(cordo::types_t<E...>) const noexcept {
-    return ::cordo::tag_t<std::common_type_t<E...>>{};
-  }
-
-  template <typename... Args>
-  constexpr auto common_err_t(Args &&...a) const noexcept {
-    return this->common_t(::cordo::meta.concat(this->err1_t((Args &&)a)...));
-  }
-
-  template <typename... Args>
-  constexpr auto eh_t(Args &&...a) const noexcept {
-    // TODO: enforce all EH's are actually exactly the same.
-    return this->common_t(::cordo::meta.concat(this->eh1_t((Args &&)a)...));
-  }
-
-  template <fallible F>
-  constexpr decltype(auto) result1(F &&v) const noexcept {
-    return F::eh_t::value((F &&)v);
-  }
-  template <typename T>
-  constexpr decltype(auto) result1(T &&v) const noexcept {
-    return (T &&)v;
-  }
-} fallible_helpers{};
-
-template <typename A>
-struct algo;
-
-struct invoke_t final {
- private:
-  template <typename A, typename... Args>
-  constexpr auto resolve(::cordo::overload_prio_t<3>, const algo<A> &a,
-                         Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
-  template <typename A, typename... Args>
-  constexpr auto resolve(::cordo::overload_prio_t<2>, const algo<A> &a,
-                         Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize(a, typename A::adl_tag{},
-                                      (Args &&)args...));
-  template <typename A, typename... Args>
-  constexpr auto resolve(::cordo::overload_prio_t<1>, const algo<A> &a,
-                         Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
-
+template <typename Fn>
+struct pipe_t final {
  public:
-  template <typename A, typename... Args>
-  constexpr auto operator()(const algo<A> &a, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<4>{}, a,
-                                          static_cast<Args &&>(args)...));
+  constexpr explicit pipe_t(Fn &&fn) noexcept(
+      std::is_nothrow_move_constructible_v<Fn>)
+      : fn_{(Fn &&)fn} {}
+
+  template <typename..., fallible V,
+            typename EH = typename std::remove_cvref_t<V>::eh_t>
+  friend constexpr decltype(auto) operator|(V &&v, pipe_t &&self)
+      CORDO_INTERNAL_RETURN_(
+          EH::has_result((V &&)v)
+              ? EH::make_result(
+                    std::invoke(((pipe_t &&)self).fn_, EH::as_result((V &&)v)),
+                    cordo::tag_t<
+                        std::remove_cvref_t<decltype(EH::as_error((V &&)v))>>{})
+              : EH::as_error((V &&)v));
+
+  template <typename..., typename V>
+  friend constexpr decltype(auto) operator|(V &&v, pipe_t &&self) noexcept(
+      noexcept(std::invoke(((pipe_t &&)self).fn_, (V &&)v)))
+    requires(!fallible<std::remove_cvref_t<V>>)
+  {
+    return std::invoke(self.fn_, (V &&)v);
+  }
+
+ private:
+  Fn fn_;
 };
+
+struct piped_t final {};
 
 template <typename A>
 struct algo final {
   static_assert(((void)A{}, true),
                 "algorithm traits must be constexpr-constructible");
 
+ private:
   template <typename... Args>
-  constexpr auto operator()(Args &&...args) const  //
-      CORDO_INTERNAL_ALIAS_(
-          ::cordo_internal_cpo_core::invoke_t{}(*this, (Args &&)args...));
+  constexpr auto invoke(::cordo::overload_prio_t<3>, Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(customize(*this, (Args &&)args...));
+  template <typename... Args, typename A2 = A>
+  constexpr auto invoke(::cordo::overload_prio_t<2>, Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(customize(*this, typename A2::adl_tag{},
+                                      (Args &&)args...));
+  template <typename... Args>
+  constexpr auto invoke(::cordo::overload_prio_t<1>, Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(A{}(*this, (Args &&)args...));
+
+ public:
+  template <typename... Args>
+  constexpr decltype(auto) operator()(piped_t, Args &&...args) const
+      CORDO_INTERNAL_RETURN_(pipe_t{
+          [self = *this, ... args = (Args &&)args](auto &&v) {
+            return self((decltype(v) &&)v, (Args &&)args...);
+          }});
+
+  template <typename... Args>
+  constexpr decltype(auto) operator()(Args &&...args) const  //
+      CORDO_INTERNAL_RETURN_(this->invoke(::cordo::overload_prio_t<3>{},
+                                          (Args &&)args...));
 
   // TODO: this stop-gap provides some minimum reasonable error-description,
   // and prevents the 1000s lines of gibberish, but maybe we could improve
   // the informativeness of it all?
   constexpr auto operator()(...) const = delete;
-};
-
-struct maybe_t final {
- private:
-  template <typename Fn, typename... Args>
-  constexpr decltype(auto) eh_wrapper(cordo::null_t, cordo::null_t, Fn &&fn,
-                                      Args &&...args) const
-      CORDO_INTERNAL_RETURN_(std::invoke((Fn &&)fn,
-                                         static_cast<Args &&>(args)...));
-
-  template <typename EH, typename E, typename F, typename... Args>
-  constexpr auto eh_wrapper(cordo::tag_t<EH>, cordo::tag_t<E>, F &&fn,
-                            Args &&...args) const
-      // TODO: noexcept eval
-      -> decltype(EH::template make_result<E>(this->eh_wrapper(
-          cordo::null_t{}, cordo::null_t{}, (F &&)fn,
-          fallible_helpers.result1(static_cast<Args &&>(args))...))) {
-    auto err = EH::template empty_error<E>();
-    const bool proceed = ([&err]<typename T>(T &&v) {
-      if constexpr (fallible<std::remove_cvref_t<T>>) {
-        if (!EH::ok((T &&)v)) {
-          err = E{EH::error((T &&)v)};
-          return false;
-        }
-        return true;
-      } else {
-        return true;
-      }
-    }((Args &&)args) && ...);
-    return proceed
-               ? EH::template make_result<E>(this->eh_wrapper(
-                     cordo::null_t{}, cordo::null_t{}, (F &&)fn,
-                     fallible_helpers.result1(static_cast<Args &&>(args))...))
-               : *std::move(err);
-  }
-
- public:
-  template <typename Fn, typename... Args>
-  constexpr decltype(auto) operator()(Fn &&fn, Args &&...args) const
-      CORDO_INTERNAL_RETURN_(this->eh_wrapper(
-          fallible_helpers.eh_t(static_cast<Args &&>(args)...),
-          fallible_helpers.common_err_t(static_cast<Args &&>(args)...),
-          (Fn &&)fn, (Args &&)args...));
 };
 
 }  // namespace cordo_internal_cpo_core
@@ -161,8 +94,7 @@ namespace cordo {
 using ::cordo_internal_cpo_core::algo;
 using ::cordo_internal_cpo_core::fallible;
 using ::cordo_internal_cpo_core::fallible_tag;
-inline constexpr ::cordo_internal_cpo_core::invoke_t invoke{};
-inline constexpr ::cordo_internal_cpo_core::maybe_t maybe{};
+inline constexpr ::cordo_internal_cpo_core::piped_t piped{};
 }  // namespace cordo
 
 namespace cordo_internal_cpo {

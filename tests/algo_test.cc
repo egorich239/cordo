@@ -53,32 +53,28 @@ struct Bar {
 template <template <typename, typename> typename R>
 struct failure_eh final {
   template <cordo::fallible F>
-  static constexpr decltype(auto) value(F&& res) noexcept {
+  static constexpr decltype(auto) as_result(F&& res) noexcept {
     return std::get<0>(((F&&)res).state);
   }
   template <cordo::fallible F>
-  static constexpr decltype(auto) error(F&& res) noexcept {
+  static constexpr decltype(auto) as_error(F&& res) noexcept {
     return std::get<1>(((F&&)res).state);
   }
 
   template <typename U>
-  static constexpr auto ok(U&& res) {
+  static constexpr auto has_result(U&& res) {
     return res.state.index() == 0;
   }
 
-  template <typename E>
-  static constexpr auto empty_error() noexcept {
-    return std::optional<E>{};
-  }
-
   template <typename E, cordo::fallible F>
-  static constexpr auto make_result(F&& res) noexcept {
+  static constexpr auto make_result(F&& res, cordo::tag_t<E>) noexcept {
+    static_assert(std::is_same_v<typename std::remove_cvref_t<F>::error_t, E>);
     static_assert(
         std::is_same_v<typename std::remove_cvref_t<F>::eh_t, failure_eh>);
     return (F&&)res;
   }
   template <typename E, typename T>
-  static constexpr auto make_result(T&& res) noexcept {
+  static constexpr auto make_result(T&& res, cordo::tag_t<E>) noexcept {
     return R<T, E>{(T&&)res};
   }
 };
@@ -87,8 +83,8 @@ template <typename R, typename E>
 struct result final {
   using tag_t = cordo::fallible_tag;
   using eh_t = failure_eh<result>;
-  using ok_t = R;
-  using err_t = E;
+  using result_t = R;
+  using error_t = E;
 
   result(R&& r) : state{(R&&)r} {}
   result(E&& e) : state{(E&&)e} {}
@@ -109,32 +105,17 @@ consteval void algo_test() {
   static_assert(algo3(1, 2, 3) == 6);
 }
 
-TEST(Algo, Fallible) {
+TEST(Algo, Pipe) {
+  static_assert((1 | algo3(cordo::piped, 2, 3)) == 6);
+
   using R = result<int, std::string>;
-  static_assert(cordo::fallible<R>);
-  static_assert(
-      std::is_same_v<decltype(::cordo_internal_cpo_core::fallible_helpers.eh_t(
-                         R{3})),
-                     ::cordo::tag_t<failure_eh<result>>>);
-  static_assert(cordo::maybe(algo3, 1, 2, 3) == 6);
+  R result = R{"noo"} | algo3(cordo::piped, 2, 3);
+  ASSERT_THAT(result.state.index(), 1);
+  EXPECT_THAT(std::get<1>(result.state), ::testing::StrEq("noo"));
 
-  R x = cordo::maybe(algo3, R(std::string("wow")));
-  ASSERT_THAT(x.state.index(), 1);
-  EXPECT_THAT(std::get<1>(x.state), ::testing::StrEq("wow"));
-
-  R y = cordo::maybe(algo3, R{3}, R{4}, 5);
-  ASSERT_THAT(y.state.index(), 0);
-  EXPECT_THAT(std::get<0>(y.state), ::testing::Eq(12));
-
-  R z = cordo::maybe(algo3, R{3}, R{"woohoo"}, R{4}, 5);
-  ASSERT_THAT(z.state.index(), 1);
-  EXPECT_THAT(std::get<1>(z.state), ::testing::StrEq("woohoo"));
-
-  // Verify that maybe is compatible with anything invocable.
-  static_assert(cordo::maybe(&Bar::bar, Bar{}, 3) == 7);
-  R w = cordo::maybe(&Bar::bar, Bar{}, R{3});
-  ASSERT_THAT(w.state.index(), 0);
-  EXPECT_THAT(std::get<0>(w.state), ::testing::Eq(7));
+  result = R{6} | algo3(cordo::piped, 2, 3);
+  ASSERT_THAT(result.state.index(), 0);
+  EXPECT_THAT(std::get<0>(result.state), ::testing::Eq(11));
 }
 
 }  // namespace

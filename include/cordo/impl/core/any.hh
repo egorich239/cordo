@@ -10,6 +10,7 @@
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"
 
+#if 0
 namespace cordo_internal_any {
 // TODO: this file is probably broken, shall be adjusted to algo.
 
@@ -191,3 +192,4 @@ namespace cordo {
 using ::cordo_internal_any::any;
 using any_v = any<>;
 }  // namespace cordo
+#endif
