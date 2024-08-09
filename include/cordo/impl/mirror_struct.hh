@@ -67,10 +67,12 @@ constexpr decltype(auto) customize(
     ::cordo::mirror_core<::cordo_internal_mirror::mirror_struct<T, Map>, EH>&
         core,
     ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(::cordo::mirror.core(::cordo::mirror_struct_access(
-        core.value,
-        ::cordo::kv_lookup(typename decltype(core.traits())::subscript_map{},
-                           k))));
+    CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
+        ::cordo::mirror_struct_access(
+            core.value,
+            ::cordo::kv_lookup(
+                typename decltype(core.traits())::subscript_map{}, k)),
+        EH{}));
 
 template <typename T, typename Map, typename EH, auto K>
 constexpr decltype(auto) customize(
@@ -78,10 +80,12 @@ constexpr decltype(auto) customize(
     const ::cordo::mirror_core<::cordo_internal_mirror::mirror_struct<T, Map>,
                                EH>& core,
     ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(::cordo::mirror.core(::cordo::mirror_struct_access(
-        core.value,
-        ::cordo::kv_lookup(typename decltype(core.traits())::subscript_map{},
-                           k))));
+    CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
+        ::cordo::mirror_struct_access(
+            core.value,
+            ::cordo::kv_lookup(
+                typename decltype(core.traits())::subscript_map{}, k)),
+        EH{}));
 
 template <typename T, typename Map>
 constexpr auto customize(

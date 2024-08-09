@@ -32,14 +32,19 @@ template <typename T, typename I, typename EH, typename Rep>
 constexpr auto customize(
     decltype(::cordo::mirror_unwrap), adl_tag,
     ::cordo::mirror_core<::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>&
-        core) CORDO_INTERNAL_ALIAS_(::cordo::mirror.core(*core.value));
+        core)
+    CORDO_INTERNAL_ALIAS_(
+        core.value ? EH::make_result(::cordo::mirror.core(*core.value, EH{}))
+                   : EH::make_error(::cordo::mirror_error::INVALID_UNWRAP));
 
 template <typename T, typename I, typename EH, typename Rep>
 constexpr auto customize(
     decltype(::cordo::mirror_unwrap), adl_tag,
     const ::cordo::mirror_core<
         ::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>& core)
-    CORDO_INTERNAL_ALIAS_(::cordo::mirror.core(*core.value));
+    CORDO_INTERNAL_ALIAS_(
+        core.value ? EH::make_result(::cordo::mirror.core(*core.value, EH{}))
+                   : EH::make_error(::cordo::mirror_error::INVALID_UNWRAP));
 
 template <typename T, typename I, typename Rep>
 constexpr auto customize(decltype(::cordo::mirror_traits_subscript_keys) algo,

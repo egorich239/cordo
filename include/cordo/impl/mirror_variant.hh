@@ -80,16 +80,25 @@ struct mirror_variant_option final {
   using rep = typename Traits::rep;
   rep variant_;
 
-  constexpr explicit operator bool() const noexcept { return this->variant_; }
+  constexpr explicit operator bool() const noexcept {
+    return this->variant_.index() == I;
+  }
   constexpr decltype(auto) operator*() { return std::get<I>(this->variant_); }
   constexpr decltype(auto) operator*() const {
     return std::get<I>(this->variant_);
   }
-  template <typename U>
+  /* TODO: something is severely broken with mirror_api assignment operator... */
+  template <
+      typename..., typename U, typename T2 = Traits,
+      typename = std::enable_if_t<!std::is_const_v<typename T2::t>>,
+      typename R = decltype(std::declval<typename T2::t&>() =
+                                std::declval<std::remove_reference_t<F>>())>
   constexpr auto operator=(U&& v) noexcept(
-      noexcept(this->variant_ = std::remove_reference_t<F>{(U&&)v}))
-      -> decltype(this->variant_ = std::remove_reference_t<F>{(U&&)v})
-    requires(std::is_constructible_v<std::remove_reference_t<F>, U &&>)
+      noexcept(this->variant_ = std::remove_reference_t<F>{(U&&)v})) -> R
+    requires(
+        /* TODO: F should inherit constness */
+        !std::is_const_v<typename Traits::t> &&
+        std::is_constructible_v<std::remove_reference_t<F>, U &&>)
   {
     return this->variant_ = std::remove_reference_t<F>{(U&&)v};
   }
@@ -126,7 +135,8 @@ constexpr decltype(auto) customize(
       core.value, ::cordo::value_t<Idx>{}));
   return ::cordo::mirror.core(
       ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
-          core.value});
+          core.value},
+      EH{});
 }
 
 template <typename T, typename Options, typename EH, auto K>
@@ -142,7 +152,8 @@ constexpr decltype(auto) customize(
       core.value, ::cordo::value_t<Idx>{}));
   return ::cordo::mirror.core(
       ::cordo_internal_mirror::mirror_variant_option<traits, F, Idx>{
-          core.value});
+          core.value},
+      EH{});
 }
 
 // mirror_variant_option

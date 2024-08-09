@@ -18,13 +18,15 @@ enum class mirror_error : uint32_t {
   INVALID_UNWRAP = 1,
 };
 
-template <typename EH, typename T>
+struct eh_result;
+
+template <typename T>
 class mirror_result final {
   static_assert(!std::is_same_v<T, mirror_error>);
 
  public:
   using tag_t = cordo::fallible_tag;
-  using eh_t = EH;
+  using eh_t = eh_result;
   using result_t = T;
   using error_t = mirror_error;
 
@@ -33,6 +35,9 @@ class mirror_result final {
       std::is_nothrow_constructible_v<T, U&&>)
     requires(std::is_constructible_v<T, U &&>)
       : state_{T{(U&&)v}} {}
+  constexpr mirror_result(T&& v) noexcept(
+      std::is_nothrow_move_constructible_v<T>)
+      : state_{(T&&)v} {}
   constexpr mirror_result(mirror_error e) noexcept : state_{e} {}
 
   constexpr mirror_result(mirror_result&&) = default;
@@ -44,7 +49,7 @@ class mirror_result final {
 
   constexpr const T& value() const& noexcept { return std::get<0>(state_); }
   constexpr T& value() & noexcept { return std::get<0>(state_); }
-  constexpr T&& value() && noexcept { return std::get<0>(state_); }
+  constexpr T&& value() && noexcept { return std::get<0>(std::move(state_)); }
 
   constexpr mirror_error error() const noexcept { return std::get<1>(state_); }
 
@@ -75,6 +80,10 @@ struct eh_stack_unwind final {
                                     cordo::tag_t<mirror_error>) noexcept {
     return (T&&)v;
   }
+  template <typename T>
+  static constexpr auto make_result(T&& v) noexcept {
+    return make_result((T&&)v, {});
+  }
   static constexpr eh_terminator_t make_error(mirror_error err) noexcept {
     return H{};
   }
@@ -101,29 +110,31 @@ using eh_throw = eh_stack_unwind<eh_exception_t>;
 
 struct eh_result final {
   template <typename T>
-  static constexpr bool has_result(mirror_result<eh_result, T>&& v) noexcept {
+  static constexpr bool has_result(mirror_result<T>&& v) noexcept {
     return v.ok();
   }
   template <typename T>
-  static constexpr decltype(auto) as_result(
-      mirror_result<eh_result, T>&& v) noexcept {
+  static constexpr decltype(auto) as_result(mirror_result<T>&& v) noexcept {
     return std::move(v).value();
   }
   template <typename T>
-  static constexpr decltype(auto) as_error(
-      mirror_result<eh_result, T>&& v) noexcept {
+  static constexpr decltype(auto) as_error(mirror_result<T>&& v) noexcept {
     return v.error();
   }
 
   template <typename T>
-  static constexpr auto make_result(mirror_result<eh_result, T>&& v,
+  static constexpr auto make_result(mirror_result<T>&& v,
                                     cordo::tag_t<mirror_error>) noexcept {
     return (T&&)v;
   }
   template <typename T>
   static constexpr auto make_result(T&& v,
                                     cordo::tag_t<mirror_error>) noexcept {
-    return mirror_result<mirror_error, T>{(T&&)v};
+    return mirror_result<T>{(T&&)v};
+  }
+  template <typename T>
+  static constexpr auto make_result(T&& v) noexcept {
+    return make_result((T&&)v, {});
   }
   static constexpr mirror_error make_error(mirror_error err) noexcept {
     return err;
@@ -133,5 +144,8 @@ struct eh_result final {
 }  // namespace mirror_internal_result
 
 namespace cordo {
+using mirror_internal_result::eh_result;
 using mirror_internal_result::eh_terminate;
+using mirror_internal_result::mirror_error;
+using mirror_internal_result::mirror_result;
 }  // namespace cordo

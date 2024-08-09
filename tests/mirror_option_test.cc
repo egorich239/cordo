@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cordo/impl/core/algo.hh>
 #include <memory>
 
 #include "cordo/cordo.hh"
@@ -54,6 +55,13 @@ TEST(Optional, UniquePtrOfStruct) {
   EXPECT_THAT(my["head"_key].v(), ::testing::Ref(x->head));
   EXPECT_THAT(my["tail"_key].v(), ::testing::Ref(x->tail));
   EXPECT_THAT(my["tail"_key]["head"_key].v(), 3);
+}
+
+TEST(Optional, EhResult) {
+  std::unique_ptr<int> x = std::make_unique<int>(2);
+  cordo::mirror_api m = ::cordo::mirror(x, cordo::eh_result{});
+  ASSERT_TRUE(m.unwrap().ok());
+  EXPECT_THAT(m.unwrap().value().v(), ::testing::Ref(*x));
 }
 
 }  // namespace

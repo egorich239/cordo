@@ -139,6 +139,7 @@ class mirror_api final {
   using core_t = mirror_core<Traits, EH>;
   core_t core_;
 
+ public:  // TODO
   constexpr const core_t& core() const noexcept { return core_; }
   constexpr core_t& core() noexcept { return core_; }
 
@@ -153,6 +154,13 @@ class mirror_api final {
   static constexpr mirror_api<T2, EH2> make_api(
       mirror_core<T2, EH2>&& core) noexcept {
     return mirror_api<T2, EH2>{(mirror_core<T2, EH2>&&)core};
+  }
+
+  // TODO: generalize for other result types?
+  template <typename T2>
+  static constexpr auto make_api(cordo::mirror_result<T2>&& res) noexcept {
+    return res.ok() ? cordo::mirror_result(make_api(std::move(res).value()))
+                    : res.error();
   }
 
  public:
@@ -182,7 +190,14 @@ class mirror_api final {
   constexpr decltype(auto) unwrap() const
       CORDO_INTERNAL_RETURN_(mirror_api::make_api(mirror_unwrap(this->core())));
 
-  template <typename U>
+  constexpr mirror_api(mirror_api&&) = default;
+  constexpr mirror_api(const mirror_api&) = default;
+  constexpr mirror_api& operator=(mirror_api&&) = default;
+  constexpr mirror_api& operator=(const mirror_api&) = default;
+
+  template <typename..., typename U,
+            typename = std::enable_if_t<
+                !std::is_same_v<std::remove_cvref_t<U>, mirror_api>>>
   constexpr auto operator=(U&& v)
       CORDO_INTERNAL_ALIAS_(((void)mirror_assign(this->core(), (U&&)v)), *this);
 
@@ -208,8 +223,8 @@ struct mirror_fn final {
   constexpr auto traits(T&&) const
       CORDO_INTERNAL_RETURN_(this->t(::cordo::tag_t<T&&>{}));
 
-  template <typename T, typename EH = cordo::eh_terminate>
-  constexpr auto core(T&& v, EH = {}) const
+  template <typename T, typename EH>
+  constexpr auto core(T&& v, EH) const
       CORDO_INTERNAL_RETURN_(mirror_core<decltype(this->traits((T&&)v)), EH>{
           static_cast<typename decltype(this->traits((T&&)v))::rep>((T&&)v)});
 

@@ -68,4 +68,11 @@ TEST(Variant, Basic) {
   EXPECT_THAT(my["Foo"_key]["x"_key].v(), 6);
 }
 
+TEST(Variant, EhResult) {
+  Var x = Foo{.x = 1};
+  cordo::mirror_api m = cordo::mirror(x, cordo::eh_result{});
+  ASSERT_TRUE(m["Foo"_key].unwrap().ok());
+  ASSERT_FALSE(m["Bar"_key].unwrap().ok());
+}
+
 }  // namespace
