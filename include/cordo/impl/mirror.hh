@@ -189,16 +189,14 @@ class mirror_api final {
     return core_.value;
   }
 
-  template <typename..., typename R = mirror_impl_t<Traits, EH>&,
-            typename = decltype(mirror_unwrap(std::declval<R>()))>
-  constexpr decltype(auto) unwrap()
-      CORDO_INTERNAL_RETURN_(mirror_unwrap(this->core()) |
-                             cordo::piped(mirror_api::make_api));
-  template <typename..., typename R = const mirror_impl_t<Traits, EH>&,
-            typename = decltype(mirror_unwrap(std::declval<R>()))>
-  constexpr decltype(auto) unwrap() const
-      CORDO_INTERNAL_RETURN_(mirror_unwrap(this->core()) |
-                             cordo::piped(mirror_api::make_api));
+  template <typename..., typename S = mirror_api&>
+  constexpr auto unwrap()
+      CORDO_INTERNAL_ALIAS_(mirror_unwrap(static_cast<S>(*this).core()) |
+                            cordo::piped(mirror_api::make_api));
+  template <typename..., typename S = const mirror_api&>
+  constexpr auto unwrap() const
+      CORDO_INTERNAL_ALIAS_(mirror_unwrap(static_cast<S>(*this).core()) |
+                            cordo::piped(mirror_api::make_api));
 
   constexpr mirror_api(mirror_api&&) = default;
   constexpr mirror_api(const mirror_api&) = default;
