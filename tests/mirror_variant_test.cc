@@ -22,8 +22,8 @@ struct Bar {
 using Bar_map = ::cordo::values_t<("y"_key <= &Bar::y)>;
 
 using Var = std::variant<Foo, Bar>;
-using Var_m = ::cordo_internal_mirror::mirror_variant<
-    Var, ::cordo::values_t<"Foo"_key, "Bar"_key>>;
+using Var_m =
+    cordo::mirror_variant<Var, ::cordo::values_t<"Foo"_key, "Bar"_key>>;
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Foo> v) noexcept {
