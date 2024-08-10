@@ -27,6 +27,11 @@ struct invoke_fn final {
   constexpr decltype(auto) operator()(A &&a, Args &&...args) const
       CORDO_INTERNAL_RETURN_(this->resolve(::cordo::overload_prio_t<3>{},
                                            (A &&)a, (Args &&)args...));
+
+  template <typename A, typename... Args>
+  constexpr auto if_well_formed(A &&a, Args &&...args) const
+      CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<3>{},
+                                          (A &&)a, (Args &&)args...));
 };
 inline constexpr invoke_fn invoke{};
 }  // namespace cordo_internal_invoke
