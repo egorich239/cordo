@@ -23,14 +23,6 @@ struct algo final {
     friend constexpr auto customize(trigger, const algo &a, Args &&...args)
         CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
 
-    // TODO: This is a hack. We should probably just remove adl_tag case
-    // altogether!
-    template <typename... Args, typename A2 = A>
-    friend constexpr auto customize(trigger, adl_tag, const algo &a,
-                                    Args &&...args)
-        CORDO_INTERNAL_ALIAS_(customize(a, typename A2::adl_tag{},
-                                        (Args &&)args...));
-
     template <typename... Args>
     constexpr auto operator()(const algo &a, Args &&...args) const
         CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
@@ -53,7 +45,3 @@ struct algo final {
 namespace cordo {
 using ::cordo_internal_cpo_core::algo;
 }  // namespace cordo
-
-namespace cordo_internal_cpo {
-struct adl_tag final {};
-}  // namespace cordo_internal_cpo

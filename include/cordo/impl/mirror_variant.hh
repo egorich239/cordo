@@ -20,15 +20,9 @@
 namespace cordo {
 namespace cordo_internal_mirror {
 
-struct mirror_variant_size_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
-struct mirror_variant_index_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
-struct mirror_variant_get_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
+struct mirror_variant_size_t final {};
+struct mirror_variant_index_t final {};
+struct mirror_variant_get_t final {};
 
 inline constexpr ::cordo::algo<mirror_variant_size_t> mirror_variant_size;
 inline constexpr ::cordo::algo<mirror_variant_index_t> mirror_variant_index;

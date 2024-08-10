@@ -13,11 +13,6 @@ struct invoke_fn final {
                          Args &&...args) const
       CORDO_INTERNAL_ALIAS_(customize((A &&)a, (Args &&)args...));
   template <typename A, typename... Args>
-  constexpr auto resolve(::cordo::overload_prio_t<2>, A &&a,
-                         Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize((A &&)a, typename A::adl_tag{},
-                                      (Args &&)args...));
-  template <typename A, typename... Args>
   constexpr auto resolve(::cordo::overload_prio_t<1>, A &&a,
                          Args &&...args) const
       CORDO_INTERNAL_ALIAS_(std::invoke((A &&)a, (Args &&)args...));

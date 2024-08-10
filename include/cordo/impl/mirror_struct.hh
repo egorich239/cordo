@@ -39,8 +39,6 @@ struct mirror_struct final {
 };
 
 struct mirror_struct_access_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-
   template <typename T, typename F>
   constexpr auto operator()(const ::cordo::algo<mirror_struct_access_t>&, T& s,
                             F T::*f) const noexcept -> decltype(s.*f) {

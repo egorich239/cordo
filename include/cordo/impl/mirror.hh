@@ -32,14 +32,10 @@ struct mirror_unsupported final {
   using t = T;
 };
 
-struct mirror_traits_of_const_t {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
+struct mirror_traits_of_const_t {};
 inline constexpr ::cordo::algo<mirror_traits_of_const_t> mirror_traits_of_const;
 
 struct mirror_traits_ctor_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-
   // The idea of unsupported type is to simplify codegens for structs:
   // every field will get a trait, worst case it will be unsupported.
   // This however still allows us to later filter them with cordo::skip().
@@ -77,8 +73,6 @@ struct mirror_traits_name_t final {
   }
 
  public:
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-
   template <typename T>
   constexpr auto operator()(const ::cordo::algo<mirror_traits_name_t>&,
                             T v) const noexcept {
@@ -98,8 +92,6 @@ struct mirror_traits_subscript_keys_t final {
   }
 
  public:
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-
   template <typename T>
   constexpr auto operator()(
       const ::cordo::algo<mirror_traits_subscript_keys_t>&, T v) const
@@ -107,8 +99,6 @@ struct mirror_traits_subscript_keys_t final {
 };
 
 struct mirror_assign_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-
   template <mirror_traits Traits, typename EH, typename U>
   constexpr decltype(auto) operator()(const ::cordo::algo<mirror_assign_t>&,
                                       mirror_core<Traits, EH>& core,
@@ -116,13 +106,9 @@ struct mirror_assign_t final {
       CORDO_INTERNAL_RETURN_(core.value = (U&&)value);
 };
 
-struct mirror_subscript_key_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
+struct mirror_subscript_key_t final {};
 
-struct mirror_unwrap_t final {
-  using adl_tag = ::cordo_internal_cpo::adl_tag;
-};
+struct mirror_unwrap_t final {};
 
 inline constexpr ::cordo::algo<mirror_traits_ctor_t> mirror_traits_ctor;
 inline constexpr ::cordo::algo<mirror_traits_name_t> mirror_traits_name;
