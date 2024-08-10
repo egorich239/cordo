@@ -26,7 +26,7 @@ struct algo final {
     template <typename... Args>
     friend constexpr auto customize(trigger, cordo::overload_prio_t<1>,
                                     const algo &a, Args &&...args)
-        CORDO_INTERNAL_ALIAS_(customize(core_t{}, (Args &&)args...));
+        CORDO_INTERNAL_ALIAS_(customize(core_t{}, a, (Args &&)args...));
 
     template <typename... Args>
     constexpr auto operator()(cordo::overload_prio_t<0>, const algo &a,

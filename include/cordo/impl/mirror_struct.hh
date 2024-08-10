@@ -55,7 +55,7 @@ inline constexpr ::cordo::algo<mirror_struct_access_core_t>
     mirror_struct_access;
 
 template <typename T, typename Map, typename EH, auto K>
-constexpr decltype(auto) customize(mirror_subscript_key_core_t,
+constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto&,
                                    mirror_core<mirror_struct<T, Map>, EH>& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
@@ -67,7 +67,7 @@ constexpr decltype(auto) customize(mirror_subscript_key_core_t,
 
 template <typename T, typename Map, typename EH, auto K>
 constexpr decltype(auto) customize(
-    mirror_subscript_key_core_t,
+    mirror_subscript_key_core_t, const auto&,
     const mirror_core<mirror_struct<T, Map>, EH>& core, ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
         mirror_struct_access(
@@ -77,7 +77,7 @@ constexpr decltype(auto) customize(
         EH{}));
 
 template <typename T, typename Map>
-constexpr auto customize(mirror_traits_of_const_core_t,
+constexpr auto customize(mirror_traits_of_const_core_t, const auto&,
                          mirror_struct<T, Map>) noexcept {
   return mirror_struct<const T, Map>{};
 }
