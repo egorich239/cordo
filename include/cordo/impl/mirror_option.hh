@@ -42,18 +42,13 @@ constexpr auto customize(mirror_traits_subscript_keys_core_t, const auto& rec,
                          mirror_option<T, I, Rep> t)
     CORDO_INTERNAL_ALIAS_(rec(::cordo::mirror.t(::cordo::tag_t<I>{})));
 
-template <typename T, typename I, typename Rep, typename EH, auto K>
-constexpr decltype(auto) customize(
-    mirror_subscript_key_core_t, const auto& rec,
-    mirror_impl_t<mirror_option<T, I, Rep>, EH>& core, ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(core.apply(mirror_unwrap) | cordo::piped(rec, k));
-
-template <typename T, typename I, typename Rep, typename EH, auto K>
-constexpr decltype(auto) customize(
-    mirror_subscript_key_core_t, const auto& rec,
-    const mirror_impl_t<mirror_option<T, I, Rep>, EH>& core,
-    ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(core.apply(mirror_unwrap) | cordo::piped(rec, k));
+template <typename T, typename I, typename Rep, auto K>
+constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto& rec,
+                                   mirror_option<T, I, Rep>, auto&& core,
+                                   ::cordo::key_t<K> k)
+    CORDO_INTERNAL_RETURN_(mirror_impl_apply((decltype(core)&&)core,
+                                             mirror_unwrap) |
+                           cordo::piped(mirror_impl_apply, rec, k));
 
 template <typename T>
 constexpr auto customize(mirror_traits_ctor_core_t,

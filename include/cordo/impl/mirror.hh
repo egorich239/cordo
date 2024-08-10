@@ -24,20 +24,29 @@ struct mirror_impl_t final {
   static constexpr auto traits() noexcept { return Traits{}; }
   static constexpr auto eh() noexcept { return EH{}; }
 
-  template <cordo::algo Algo, typename... Args>
-      constexpr auto apply(Algo algo, Args&&... args) &
-      CORDO_INTERNAL_ALIAS_(algo(Traits{}, *this, (Args&&)args...));
-
-  template <cordo::algo Algo, typename... Args>
-      constexpr auto apply(Algo algo, Args&&... args) &&
-      CORDO_INTERNAL_ALIAS_(algo(Traits{}, std::move(*this), (Args&&)args...));
-
-  template <cordo::algo Algo, typename... Args>
-  constexpr auto apply(Algo algo, Args&&... args) const& CORDO_INTERNAL_ALIAS_(
-      algo(Traits{}, *this, (Args&&)args...));
-
   rep_t value;
 };
+
+struct mirror_impl_apply_fn final {
+  template <typename..., mirror_traits Traits, typename EH, cordo::algo Algo,
+            typename... Args>
+  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>& core,
+                                      Algo algo, Args&&... args) const
+      CORDO_INTERNAL_RETURN_(algo(Traits{}, core, (Args&&)args...));
+
+  template <typename..., mirror_traits Traits, typename EH, cordo::algo Algo,
+            typename... Args>
+  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>&& core,
+                                      Algo algo, Args&&... args) const
+      CORDO_INTERNAL_RETURN_(algo(Traits{}, std::move(core), (Args&&)args...));
+
+  template <typename..., mirror_traits Traits, typename EH, cordo::algo Algo,
+            typename... Args>
+  constexpr decltype(auto) operator()(const mirror_impl_t<Traits, EH>& core,
+                                      Algo algo, Args&&... args) const
+      CORDO_INTERNAL_RETURN_(algo(Traits{}, core, (Args&&)args...));
+};
+inline constexpr mirror_impl_apply_fn mirror_impl_apply{};
 
 template <typename T>
 struct mirror_unsupported final {
@@ -180,11 +189,6 @@ class mirror_api final {
   constexpr const core_t& core() const noexcept { return core_; }
   constexpr core_t& core() noexcept { return core_; }
 
-  template <auto K, typename C>
-  static constexpr decltype(auto) subscript(::cordo::overload_prio_t<1>,
-                                            C&& core, ::cordo::key_t<K> k)
-      CORDO_INTERNAL_RETURN_(mirror_subscript_key((C&&)core, k));
-
   // TODO: inspirational goal: subscript(non-key-index)
 
   static constexpr struct make_api_fn final {
@@ -214,11 +218,13 @@ class mirror_api final {
 
   template <typename..., typename S = mirror_api&>
   constexpr decltype(auto) unwrap()
-      CORDO_INTERNAL_RETURN_(static_cast<S>(*this).core().apply(mirror_unwrap) |
+      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
+                                               mirror_unwrap) |
                              cordo::piped(mirror_api::make_api));
   template <typename..., typename S = const mirror_api&>
   constexpr decltype(auto) unwrap() const
-      CORDO_INTERNAL_RETURN_(static_cast<S>(*this).core().apply(mirror_unwrap) |
+      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
+                                               mirror_unwrap) |
                              cordo::piped(mirror_api::make_api));
 
   constexpr mirror_api(mirror_api&&) = default;
@@ -232,16 +238,16 @@ class mirror_api final {
   constexpr auto operator=(U&& v)
       CORDO_INTERNAL_ALIAS_(((void)mirror_assign(this->core(), (U&&)v)), *this);
 
-  template <typename K>
-  constexpr auto operator[](K&& k) const
-      CORDO_INTERNAL_ALIAS_(mirror_api::subscript(::cordo::overload_prio_t<1>{},
-                                                  this->core(), (K&&)k) |
+  template <auto K>
+  constexpr auto operator[](::cordo::key_t<K> k) const
+      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
+                                              mirror_subscript_key, k) |
                             cordo::piped(mirror_api::make_api));
 
-  template <typename K>
-  constexpr auto operator[](K&& k)
-      CORDO_INTERNAL_ALIAS_(mirror_api::subscript(::cordo::overload_prio_t<1>{},
-                                                  this->core(), (K&&)k) |
+  template <auto K>
+  constexpr auto operator[](::cordo::key_t<K> k)
+      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
+                                              mirror_subscript_key, k) |
                             cordo::piped(mirror_api::make_api));
 };
 template <typename Traits, typename EH>

@@ -110,30 +110,17 @@ constexpr auto customize(mirror_traits_of_const_core_t,
   return mirror_variant<const T, Options>{};
 }
 
-template <typename T, typename Options, typename EH, auto K>
-constexpr decltype(auto) customize(
-    mirror_subscript_key_core_t,
-    mirror_impl_t<mirror_variant<T, Options>, EH>& core,
-    ::cordo::key_t<K> k) noexcept {
+template <typename T, typename Options, auto K>
+constexpr decltype(auto) customize(mirror_subscript_key_core_t,
+                                   mirror_variant<T, Options>, auto&& core,
+                                   ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
   constexpr size_t Idx =
       ::cordo::kv_lookup(typename traits::subscript_map{}, decltype(k){});
   using F = decltype(mirror_variant_get(core.value, ::cordo::value_t<Idx>{}));
-  return ::cordo::mirror.core(mirror_variant_option<traits, F, Idx>{core.value},
-                              EH{});
-}
-
-template <typename T, typename Options, typename EH, auto K>
-constexpr decltype(auto) customize(
-    mirror_subscript_key_core_t,
-    const mirror_impl_t<mirror_variant<T, Options>, EH>& core,
-    ::cordo::key_t<K> k) noexcept {
-  using traits = decltype(core.traits());
-  constexpr size_t Idx =
-      ::cordo::kv_lookup(typename traits::subscript_map{}, decltype(k){});
-  using F = decltype(mirror_variant_get(core.value, ::cordo::value_t<Idx>{}));
-  return ::cordo::mirror.core(mirror_variant_option<traits, F, Idx>{core.value},
-                              EH{});
+  return core |
+         cordo::piped(make_mirror_impl, mirror_variant_option<traits, F, Idx>{
+                                            ((decltype(core)&&)core).value});
 }
 
 // mirror_variant_option
