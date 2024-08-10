@@ -143,7 +143,7 @@ constexpr decltype(auto) customize(decltype(cordo::fallible_get_error),
   return r.error();
 }
 
-static_assert(cordo::fallible2<mirror_result<int>>);
+static_assert(cordo::fallible<mirror_result<int>>);
 
 }  // namespace mirror_internal_result
 

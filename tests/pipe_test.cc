@@ -75,20 +75,19 @@ constexpr decltype(auto) customize(decltype(cordo::fallible_get_factory),
   return eh{};
 }
 
-static_assert(cordo::fallible2<Res<int>>);
-static_assert(!cordo::fallible2<int>);
+static_assert(cordo::fallible<Res<int>>);
+static_assert(!cordo::fallible<int>);
 
 TEST(Pipe, Then) {
-  EXPECT_THAT(3 | cordo::piped2([](int x, int y) { return x + y; }, 5), 8);
+  EXPECT_THAT(3 | cordo::piped([](int x, int y) { return x + y; }, 5), 8);
 
-  Res r = Res<int>{3} | cordo::piped2([](int x) { return x + 2; });
+  Res r = Res<int>{3} | cordo::piped([](int x) { return x + 2; });
   ASSERT_TRUE(cordo::invoke(cordo::fallible_has_value, r));
   EXPECT_THAT(cordo::invoke(cordo::fallible_get_value, r),
               testing::Ref(std::get<0>(r.data)));
   EXPECT_THAT(cordo::invoke(cordo::fallible_get_value, r), 5);
 
-  r = Res<int>{std::string("fail")} |
-      cordo::piped2([](int x) { return x + 2; });
+  r = Res<int>{std::string("fail")} | cordo::piped([](int x) { return x + 2; });
   ASSERT_FALSE(cordo::invoke(cordo::fallible_has_value, r));
   EXPECT_THAT(cordo::invoke(cordo::fallible_get_error, r),
               testing::Ref(std::get<1>(r.data)));

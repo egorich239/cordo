@@ -49,13 +49,13 @@ template <typename T, typename I, typename Rep, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(mirror_subscript_key) algo,
     mirror_core<mirror_option<T, I, Rep>, EH>& core, ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) | cordo::piped2(algo, k));
+    CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) | cordo::piped(algo, k));
 
 template <typename T, typename I, typename Rep, typename EH, auto K>
 constexpr decltype(auto) customize(
     decltype(mirror_subscript_key) algo,
     const mirror_core<mirror_option<T, I, Rep>, EH>& core, ::cordo::key_t<K> k)
-    CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) | cordo::piped2(algo, k));
+    CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) | cordo::piped(algo, k));
 
 template <typename T>
 constexpr auto customize(decltype(mirror_traits_ctor),

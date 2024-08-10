@@ -25,7 +25,7 @@ struct fallible_get_error_cpo final {};
 inline constexpr fallible_get_error_cpo fallible_get_error{};
 
 template <typename T>
-concept fallible2 = requires(T&& v) {
+concept fallible = requires(T&& v) {
   cordo::invoke.if_well_formed(fallible_get_factory, (T&&)v);
   {
     cordo::invoke.if_well_formed(fallible_has_value, (T&&)v)
@@ -35,15 +35,14 @@ concept fallible2 = requires(T&& v) {
 };
 
 template <typename T>
-concept not_fallible2 = !fallible2<T>;
+concept not_fallible = !fallible<T>;
 
 struct pipe_then_fn final {
-  template <typename... Args, not_fallible2 F,
-            std::invocable<F&&, Args&&...> Fn>
+  template <typename... Args, not_fallible F, std::invocable<F&&, Args&&...> Fn>
   constexpr decltype(auto) operator()(F&& v, Fn&& fn, Args&&... args) const
       CORDO_INTERNAL_RETURN_(std::invoke((Fn&&)fn, (F&&)v, (Args&&)args...));
 
-  template <typename... Args, fallible2 F,
+  template <typename... Args, fallible F,
             std::invocable<decltype(cordo::invoke(fallible_get_value,
                                                   std::declval<F&&>())),
                            Args&&...>
@@ -94,14 +93,14 @@ struct piped_fn final {
           .args = {(Args&&)args...},
       });
 };
-inline constexpr piped_fn piped2;
+inline constexpr piped_fn piped;
 
 }  // namespace cordo_internal_pipe
 
-using cordo_internal_pipe::fallible2;
+using cordo_internal_pipe::fallible;
 using cordo_internal_pipe::fallible_get_error;
 using cordo_internal_pipe::fallible_get_factory;
 using cordo_internal_pipe::fallible_get_value;
 using cordo_internal_pipe::fallible_has_value;
-using cordo_internal_pipe::piped2;
+using cordo_internal_pipe::piped;
 }  // namespace cordo
