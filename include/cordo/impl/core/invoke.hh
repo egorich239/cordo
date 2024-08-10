@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
 
@@ -11,7 +13,13 @@ struct invoke_fn final {
   template <typename A, typename... Args>
   constexpr auto resolve(::cordo::overload_prio_t<3>, A &&a,
                          Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize((A &&)a, (Args &&)args...));
+      noexcept(noexcept(customize((A &&)a, (Args &&)args...)))
+          -> decltype(customize((A &&)a, (Args &&)args...))
+    requires(!std::is_function_v<A> && !std::is_member_function_pointer_v<A>)
+  {
+    return customize((A &&)a, (Args &&)args...);
+  }
+
   template <typename A, typename... Args>
   constexpr auto resolve(::cordo::overload_prio_t<1>, A &&a,
                          Args &&...args) const
