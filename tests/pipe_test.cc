@@ -17,12 +17,6 @@ struct Res {
 };
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_is_fallible),
-                                   cordo::tag_t<Res<T>>) noexcept {
-  return true;
-}
-
-template <typename T>
 constexpr decltype(auto) customize(decltype(cordo::fallible_has_value),
                                    const Res<T>& r) noexcept {
   return r.data.index() == 0;

@@ -11,6 +11,7 @@
 #include "cordo/impl/core/cstring.hh"
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"
+#include "cordo/impl/core/pipe.hh"
 #include "cordo/impl/mirror.hh"
 
 namespace cordo_internal_mirror {
@@ -59,7 +60,7 @@ constexpr decltype(auto) customize(
         core,
     ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) |
-                           cordo::mirror_subscript_key(cordo::piped, k));
+                           cordo::piped2(cordo::mirror_subscript_key, k));
 
 template <typename T, typename I, typename Rep, typename EH, auto K>
 constexpr decltype(auto) customize(
@@ -68,7 +69,7 @@ constexpr decltype(auto) customize(
         ::cordo_internal_mirror::mirror_option<T, I, Rep>, EH>& core,
     ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(cordo::mirror_unwrap(core) |
-                           cordo::mirror_subscript_key(cordo::piped, k));
+                           cordo::piped2(cordo::mirror_subscript_key, k));
 
 template <typename T>
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,

@@ -15,9 +15,6 @@ namespace cordo_internal_pipe {
 struct fallible_get_factory_cpo final {};
 inline constexpr fallible_get_factory_cpo fallible_get_factory{};
 
-struct fallible_is_fallible_cpo final {};
-inline constexpr fallible_is_fallible_cpo fallible_is_fallible{};
-
 struct fallible_has_value_cpo final {};
 inline constexpr fallible_has_value_cpo fallible_has_value{};
 
@@ -29,9 +26,6 @@ inline constexpr fallible_get_error_cpo fallible_get_error{};
 
 template <typename T>
 concept fallible2 = requires(T&& v) {
-  typename cordo::value_t<cordo::invoke.if_well_formed(
-      fallible_is_fallible, cordo::tag_t<std::remove_cvref_t<T>>{})>;
-
   {
     cordo::invoke.if_well_formed(fallible_has_value, (T&&)v)
   } -> std::same_as<bool>;
@@ -108,6 +102,5 @@ using cordo_internal_pipe::fallible_get_error;
 using cordo_internal_pipe::fallible_get_factory;
 using cordo_internal_pipe::fallible_get_value;
 using cordo_internal_pipe::fallible_has_value;
-using cordo_internal_pipe::fallible_is_fallible;
 using cordo_internal_pipe::piped2;
 }  // namespace cordo
