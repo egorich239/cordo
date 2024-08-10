@@ -143,7 +143,7 @@ struct make_mirror_impl_fn final {
 
   template <typename..., typename Ctx, typename T>
   constexpr auto operator()(Ctx&& ctx, T&& v) const CORDO_INTERNAL_RETURN_(
-      (*this)((Ctx&&)ctx, mirror_traits_ctor(::cordo::tag_t<T>{}), (T&&)v));
+      (*this)((Ctx&&)ctx, mirror_traits_ctor(::cordo::tag_t<T&&>{}), (T&&)v));
 };
 inline constexpr make_mirror_impl_fn make_mirror_impl{};
 
@@ -237,8 +237,7 @@ struct mirror_fn final {
 
   template <typename T, typename EH>
   constexpr auto core(T&& v, EH) const
-      CORDO_INTERNAL_RETURN_(mirror_impl_t<decltype(this->traits((T&&)v)), EH>{
-          static_cast<typename decltype(this->traits((T&&)v))::rep>((T&&)v)});
+      CORDO_INTERNAL_RETURN_(make_mirror_impl(EH{}, (T&&)v));
 
   template <typename T, typename EH = cordo::eh_terminate>
   constexpr auto operator()(T&& v, EH eh = {}) const CORDO_INTERNAL_RETURN_(
