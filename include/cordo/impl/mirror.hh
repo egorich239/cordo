@@ -147,6 +147,29 @@ struct make_mirror_impl_fn final {
 };
 inline constexpr make_mirror_impl_fn make_mirror_impl{};
 
+struct make_mirror_result_fn final {
+  template <typename..., typename T>
+  constexpr decltype(auto) operator()(mirror_result<T>&& res) const
+      CORDO_INTERNAL_RETURN_((mirror_result<T>&&)res);
+
+  template <typename..., mirror_traits Traits, typename EH>
+  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>&& res) const
+      CORDO_INTERNAL_RETURN_(EH::make_result((mirror_impl_t<Traits, EH>&&)res));
+};
+inline constexpr make_mirror_result_fn make_mirror_result{};
+
+struct make_mirror_error_fn final {
+  template <typename..., typename EH>
+  constexpr auto operator()(EH, mirror_error err) const
+      CORDO_INTERNAL_ALIAS_(EH::make_error(err));
+
+  template <typename..., mirror_traits Tr0, typename EH>
+  constexpr decltype(auto) operator()(const mirror_impl_t<Tr0, EH>&,
+                                      mirror_error err) const
+      CORDO_INTERNAL_RETURN_(EH::make_error(err));
+};
+inline constexpr make_mirror_error_fn make_mirror_error{};
+
 template <mirror_traits Traits, typename EH>
 class mirror_api final {
   using T = typename Traits::t;
@@ -191,11 +214,11 @@ class mirror_api final {
 
   template <typename..., typename S = mirror_api&>
   constexpr decltype(auto) unwrap()
-      CORDO_INTERNAL_RETURN_(mirror_unwrap(static_cast<S>(*this).core()) |
+      CORDO_INTERNAL_RETURN_(static_cast<S>(*this).core().apply(mirror_unwrap) |
                              cordo::piped(mirror_api::make_api));
   template <typename..., typename S = const mirror_api&>
   constexpr decltype(auto) unwrap() const
-      CORDO_INTERNAL_RETURN_(mirror_unwrap(static_cast<S>(*this).core()) |
+      CORDO_INTERNAL_RETURN_(static_cast<S>(*this).core().apply(mirror_unwrap) |
                              cordo::piped(mirror_api::make_api));
 
   constexpr mirror_api(mirror_api&&) = default;
