@@ -113,7 +113,7 @@ constexpr auto customize(mirror_traits_of_const_core_t,
 template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
     mirror_subscript_key_core_t,
-    mirror_core_t<mirror_variant<T, Options>, EH>& core,
+    mirror_impl_t<mirror_variant<T, Options>, EH>& core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
   constexpr size_t Idx =
@@ -126,7 +126,7 @@ constexpr decltype(auto) customize(
 template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
     mirror_subscript_key_core_t,
-    const mirror_core_t<mirror_variant<T, Options>, EH>& core,
+    const mirror_impl_t<mirror_variant<T, Options>, EH>& core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
   constexpr size_t Idx =
