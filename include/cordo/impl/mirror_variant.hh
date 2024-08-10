@@ -87,7 +87,8 @@ struct mirror_variant_option final {
   constexpr decltype(auto) operator*() const {
     return std::get<I>(this->variant_);
   }
-  /* TODO: something is severely broken with mirror_api assignment operator... */
+  /* TODO: something is severely broken with mirror_api assignment operator...
+   */
   template <
       typename..., typename U, typename T2 = Traits,
       typename = std::enable_if_t<!std::is_const_v<typename T2::t>>,
@@ -163,24 +164,23 @@ constexpr auto customize(
     ::cordo::tag_t<::cordo_internal_mirror::mirror_variant_option<
         Traits, F, I>&&>) noexcept {
   using Opt = ::cordo_internal_mirror::mirror_variant_option<Traits, F, I>;
-  return ::cordo_internal_mirror::mirror_option<Opt, F, Opt>{};
+  return cordo::mirror_option<Opt, F, Opt>{};
 }
 
 template <
     typename..., typename Traits, typename F, size_t I,
     typename Opt = ::cordo_internal_mirror::mirror_variant_option<Traits, F, I>>
-constexpr auto customize(
-    decltype(::cordo::mirror_traits_of_const), adl_tag,
-    ::cordo_internal_mirror::mirror_option<Opt, F, Opt>) noexcept {
+constexpr auto customize(decltype(::cordo::mirror_traits_of_const), adl_tag,
+                         cordo::mirror_option<Opt, F, Opt>) noexcept {
   using OptC =
       ::cordo_internal_mirror::mirror_variant_option<Traits, const F, I>;
-  return ::cordo_internal_mirror::mirror_option<OptC, const F, OptC>{};
+  return cordo::mirror_option<OptC, const F, OptC>{};
 }
 
 template <typename Traits, typename F, size_t I>
 constexpr auto customize(
     decltype(::cordo::mirror_traits_subscript_keys) algo, adl_tag,
-    ::cordo_internal_mirror::mirror_option<
+    cordo::mirror_option<
         ::cordo_internal_mirror::mirror_variant_option<Traits, F, I>, F,
         ::cordo_internal_mirror::mirror_variant_option<Traits, F,
                                                        I>>) noexcept {
