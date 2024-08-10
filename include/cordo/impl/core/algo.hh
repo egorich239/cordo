@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "cordo/impl/core/invoke.hh"
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
 
@@ -75,16 +76,25 @@ struct algo final {
                 "algorithm traits must be constexpr-constructible");
 
  private:
-  template <typename... Args>
-  constexpr auto invoke(::cordo::overload_prio_t<3>, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize(*this, (Args &&)args...));
-  template <typename... Args, typename A2 = A>
-  constexpr auto invoke(::cordo::overload_prio_t<2>, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(customize(*this, typename A2::adl_tag{},
-                                      (Args &&)args...));
-  template <typename... Args>
-  constexpr auto invoke(::cordo::overload_prio_t<1>, Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(A{}(*this, (Args &&)args...));
+  struct trigger final {
+    struct adl_tag final {};
+
+    template <typename... Args>
+    friend constexpr auto customize(trigger, const algo &a, Args &&...args)
+        CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
+
+    // TODO: This is a hack. We should probably just remove adl_tag case
+    // altogether!
+    template <typename... Args, typename A2 = A>
+    friend constexpr auto customize(trigger, adl_tag, const algo &a,
+                                    Args &&...args)
+        CORDO_INTERNAL_ALIAS_(customize(a, typename A2::adl_tag{},
+                                        (Args &&)args...));
+
+    template <typename... Args>
+    constexpr auto operator()(const algo &a, Args &&...args) const
+        CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
+  };
 
  public:
   template <typename... Args>
@@ -96,8 +106,8 @@ struct algo final {
 
   template <typename... Args>
   constexpr decltype(auto) operator()(Args &&...args) const  //
-      CORDO_INTERNAL_RETURN_(this->invoke(::cordo::overload_prio_t<3>{},
-                                          (Args &&)args...));
+      CORDO_INTERNAL_RETURN_(::cordo::invoke(trigger{}, *this,
+                                             (Args &&)args...));
 
   // TODO: this stop-gap provides some minimum reasonable error-description,
   // and prevents the 1000s lines of gibberish, but maybe we could improve

@@ -1,0 +1,58 @@
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <string>
+
+#include "cordo/cordo.hh"
+
+namespace {
+
+template <typename EH, typename V, typename E>
+struct result final {
+  using tag_t = cordo::fallible2_tag_t;
+  using eh_t = EH;
+  using value_t = V;
+  using error_t = E;
+
+  result(V&& r) : state{(V&&)r} {}
+  result(E&& e) : state{(E&&)e} {}
+
+  std::variant<V, E> state;
+};
+
+struct eh final {
+  using tag_t = cordo::error_handler_tag_t;
+
+  template <typename E, typename T>
+  static constexpr auto make_value(T&& v) {
+    return result<eh, T, E>((T&&)v);
+  }
+  template <typename T, typename E>
+  static constexpr auto make_error(E&& e) {
+    return result<eh, T, E>((E&&)e);
+  }
+  template <typename T, typename E>
+  static constexpr decltype(auto) has_value(const result<eh, T, E>& r) {
+    return r.state.index() == 0;
+  }
+  template <typename T, typename E>
+  static constexpr decltype(auto) get_value(result<eh, T, E> r) {
+    return std::get<0>(r.state);
+  }
+  template <typename T, typename E>
+  static constexpr decltype(auto) get_error(result<eh, T, E> r) {
+    return std::get<1>(r.state);
+  }
+};
+
+TEST(Pipe, Then) {
+  cordo::cordo_internal_pipe::pipe_helper_t<eh> h;
+  EXPECT_THAT(h.then(3, [](int x) { return x + 2; }), 5);
+
+  using res = result<eh, int, std::string>;
+  res r = h.then(res{3}, [](int x) { return x + 2; });
+  ASSERT_TRUE(h.has_value(r));
+  //   EXPECT_THAT(h.get_value(r), 5);
+}
+
+}  // namespace
