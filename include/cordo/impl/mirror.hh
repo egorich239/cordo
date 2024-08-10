@@ -190,13 +190,13 @@ class mirror_api final {
   }
 
   template <typename..., typename S = mirror_api&>
-  constexpr auto unwrap()
-      CORDO_INTERNAL_ALIAS_(mirror_unwrap(static_cast<S>(*this).core()) |
-                            cordo::piped(mirror_api::make_api));
+  constexpr decltype(auto) unwrap()
+      CORDO_INTERNAL_RETURN_(mirror_unwrap(static_cast<S>(*this).core()) |
+                             cordo::piped(mirror_api::make_api));
   template <typename..., typename S = const mirror_api&>
-  constexpr auto unwrap() const
-      CORDO_INTERNAL_ALIAS_(mirror_unwrap(static_cast<S>(*this).core()) |
-                            cordo::piped(mirror_api::make_api));
+  constexpr decltype(auto) unwrap() const
+      CORDO_INTERNAL_RETURN_(mirror_unwrap(static_cast<S>(*this).core()) |
+                             cordo::piped(mirror_api::make_api));
 
   constexpr mirror_api(mirror_api&&) = default;
   constexpr mirror_api(const mirror_api&) = default;
