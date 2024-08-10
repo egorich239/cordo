@@ -179,110 +179,98 @@ struct make_mirror_error_fn final {
 inline constexpr make_mirror_error_fn make_mirror_error{};
 
 template <typename Impl>
-class mirror_api;
+class mirror_api_t;
 
 struct make_mirror_api_fn final {
   template <mirror_traits Traits, typename EH>
-  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>&& impl) const
-      noexcept(
-          std::is_nothrow_constructible_v<mirror_api<mirror_impl_t<Traits, EH>>,
-                                          mirror_impl_t<Traits, EH>&&>) {
-    return mirror_api<mirror_impl_t<Traits, EH>>{std::move(impl)};
+  constexpr decltype(auto)
+  operator()(mirror_impl_t<Traits, EH>&& impl) const noexcept(
+      std::is_nothrow_constructible_v<mirror_api_t<mirror_impl_t<Traits, EH>>,
+                                      mirror_impl_t<Traits, EH>&&>) {
+    return mirror_api_t<mirror_impl_t<Traits, EH>>{std::move(impl)};
   }
 };
 inline constexpr make_mirror_api_fn make_mirror_api{};
 
 template <mirror_traits Traits, typename EH>
-class mirror_api<mirror_impl_t<Traits, EH>> final {
+class mirror_api_t<mirror_impl_t<Traits, EH>> final {
   using T = typename Traits::t;
-  using rep = typename Traits::rep;
-  using core_t = mirror_impl_t<Traits, EH>;
-  core_t core_;
+  using rep_t = typename Traits::rep;
+  using impl_t = mirror_impl_t<Traits, EH>;
+  impl_t impl_;
 
-  constexpr const core_t& core() const noexcept { return core_; }
-  constexpr core_t& core() noexcept { return core_; }
+  constexpr const impl_t& impl() const noexcept { return impl_; }
+  constexpr impl_t& impl() noexcept { return impl_; }
 
   // TODO: inspirational goal: subscript(non-key-index)
  public:
   using traits = Traits;
 
-  constexpr mirror_api(mirror_api&&) = default;
-  constexpr mirror_api(const mirror_api&) = default;
-  constexpr mirror_api& operator=(mirror_api&&) = default;
-  constexpr mirror_api& operator=(const mirror_api&) = default;
+  constexpr mirror_api_t(mirror_api_t&&) = default;
+  constexpr mirror_api_t(const mirror_api_t&) = default;
+  constexpr mirror_api_t& operator=(mirror_api_t&&) = default;
+  constexpr mirror_api_t& operator=(const mirror_api_t&) = default;
 
-  explicit constexpr mirror_api(core_t&& core) noexcept(
-      std::is_nothrow_move_constructible_v<core_t>)
-      : core_{(core_t&&)core} {}
+  explicit constexpr mirror_api_t(impl_t&& core) noexcept(
+      std::is_nothrow_move_constructible_v<impl_t>)
+      : impl_{(impl_t&&)core} {}
 
   constexpr const T& v() const noexcept
-    requires(std::is_same_v<T&, rep>)
+    requires(std::is_same_v<T&, rep_t>)
   {
-    return core_.value;
+    return impl_.value;
   }
   constexpr T& v() noexcept
-    requires(std::is_same_v<T&, rep>)
+    requires(std::is_same_v<T&, rep_t>)
   {
-    return core_.value;
+    return impl_.value;
   }
 
-  template <typename..., typename S = mirror_api&>
+  template <typename..., typename S = mirror_api_t&>
   constexpr decltype(auto) unwrap()
-      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
+      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).impl(),
                                                mirror_unwrap) |
                              cordo::piped(make_mirror_api));
-  template <typename..., typename S = const mirror_api&>
+  template <typename..., typename S = const mirror_api_t&>
   constexpr decltype(auto) unwrap() const
-      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
+      CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).impl(),
                                                mirror_unwrap) |
                              cordo::piped(make_mirror_api));
 
   template <typename..., typename U,
             typename = std::enable_if_t<
-                !std::is_same_v<std::remove_cvref_t<U>, mirror_api>>>
+                !std::is_same_v<std::remove_cvref_t<U>, mirror_api_t>>>
   constexpr auto operator=(U&& v) noexcept(
-      noexcept(mirror_impl_apply(this->core(), mirror_assign, (U&&)v)))
-      -> decltype(((void)mirror_impl_apply(this->core(), mirror_assign,
+      noexcept(mirror_impl_apply(this->impl(), mirror_assign, (U&&)v)))
+      -> decltype(((void)mirror_impl_apply(this->impl(), mirror_assign,
                                            (U&&)v)),
                   *this) {
-    mirror_impl_apply(this->core(), mirror_assign, (U&&)v);
+    mirror_impl_apply(this->impl(), mirror_assign, (U&&)v);
     return *this;
   }
 
   template <auto K>
   constexpr auto operator[](::cordo::key_t<K> k) const
-      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
+      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->impl(),
                                               mirror_subscript_key, k) |
                             cordo::piped(make_mirror_api));
 
   template <auto K>
   constexpr auto operator[](::cordo::key_t<K> k)
-      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
+      CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->impl(),
                                               mirror_subscript_key, k) |
                             cordo::piped(make_mirror_api));
 };
 
 struct mirror_fn final {
-  template <typename T>
-  constexpr auto t(::cordo::tag_t<T>) const
-      CORDO_INTERNAL_RETURN_(mirror_traits_ctor(::cordo::tag_t<T>{}));
-
-  template <typename T>
-  constexpr auto traits(T&&) const
-      CORDO_INTERNAL_RETURN_(this->t(::cordo::tag_t<T&&>{}));
-
-  template <typename T, typename EH>
-  constexpr auto core(T&& v, EH) const
-      CORDO_INTERNAL_RETURN_(make_mirror_impl(EH{}, (T&&)v));
-
   template <typename T, typename EH = cordo::eh_terminate>
   constexpr auto operator()(T&& v, EH eh = {}) const
-      CORDO_INTERNAL_RETURN_(this->core((T&&)v, eh) |
+      CORDO_INTERNAL_RETURN_(make_mirror_impl(eh, (T&&)v) |
                              cordo::piped(make_mirror_api));
 };
 }  // namespace cordo_internal_mirror
 
-using cordo_internal_mirror::mirror_api;
+using cordo_internal_mirror::mirror_api_t;
 using cordo_internal_mirror::mirror_impl_t;
 
 using cordo_internal_mirror::mirror_traits_ctor;

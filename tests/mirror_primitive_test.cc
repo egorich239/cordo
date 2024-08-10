@@ -13,49 +13,50 @@ using ::cordo::make_key;
 consteval void mirror_primitive_name_test() {
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<bool&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<bool&>{}))),
                 make_key<"bool"_cs>>);
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<char&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<char&>{}))),
                 make_key<cstring("char")>>);
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<float&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<float&>{}))),
                 make_key<cstring("f32")>>);
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<double&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<double&>{}))),
                 make_key<cstring("f64")>>);
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<int32_t&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<int32_t&>{}))),
                 make_key<cstring("i32")>>);
   static_assert(std::is_same_v<  //
                 decltype(::cordo::mirror_traits_name(
-                    ::cordo::mirror.t(::cordo::tag_t<uint32_t&>{}))),
+                    cordo::mirror_traits_ctor(::cordo::tag_t<uint32_t&>{}))),
                 make_key<cstring("u32")>>);
 }
 
 consteval void mirror_primitive_cpo_test() {
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<char&>{})),
+                decltype(cordo::mirror_traits_ctor(::cordo::tag_t<char&>{})),
                 cordo::mirror_primitive<char>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<bool&>{})),
+                decltype(cordo::mirror_traits_ctor(::cordo::tag_t<bool&>{})),
                 cordo::mirror_primitive<bool>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<float&>{})),
+                decltype(cordo::mirror_traits_ctor(::cordo::tag_t<float&>{})),
                 cordo::mirror_primitive<float>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<double&>{})),
+                decltype(cordo::mirror_traits_ctor(::cordo::tag_t<double&>{})),
                 cordo::mirror_primitive<double>>);
   static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<int&>{})),
+                decltype(cordo::mirror_traits_ctor(::cordo::tag_t<int&>{})),
                 cordo::mirror_primitive<int>>);
-  static_assert(std::is_same_v<  //
-                decltype(::cordo::mirror.t(::cordo::tag_t<unsigned&>{})),
-                cordo::mirror_primitive<unsigned>>);
+  static_assert(
+      std::is_same_v<  //
+          decltype(cordo::mirror_traits_ctor(::cordo::tag_t<unsigned&>{})),
+          cordo::mirror_primitive<unsigned>>);
 }
 
 TEST(MirrorPrimitive, Basic) {

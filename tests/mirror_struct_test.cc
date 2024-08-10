@@ -65,7 +65,7 @@ consteval void mirror_struct_subscipt_map_test() {
 
 consteval void mirror_struct_cpo_test() {
   using m = cordo::mirror_struct<SomeStruct, SomeStruct_map>;
-  static_assert(std::is_same_v<m, decltype(::cordo::mirror.t(
+  static_assert(std::is_same_v<m, decltype(cordo::mirror_traits_ctor(
                                       ::cordo::tag_t<SomeStruct&>{}))>);
 }
 
@@ -76,7 +76,7 @@ TEST(MirrorStruct, Mut) {
       .z = '1',
   };
 
-  cordo::mirror_api mf = ::cordo::mirror(f);
+  cordo::mirror_api_t mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
 
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
@@ -94,7 +94,7 @@ TEST(MirrorStruct, Const) {
       .z = '1',
   };
 
-  cordo::mirror_api mf = ::cordo::mirror(f);
+  cordo::mirror_api_t mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
   EXPECT_THAT(mf["y"_key].v(), ::testing::Ref(f.y));

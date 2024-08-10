@@ -40,7 +40,7 @@ constexpr auto customize(mirror_unwrap_core_t, mirror_option<T, I, Rep>,
 template <typename T, typename I, typename Rep>
 constexpr auto customize(mirror_traits_subscript_keys_core_t, const auto& rec,
                          mirror_option<T, I, Rep> t)
-    CORDO_INTERNAL_ALIAS_(rec(::cordo::mirror.t(::cordo::tag_t<I>{})));
+    CORDO_INTERNAL_ALIAS_(rec(mirror_traits_ctor(::cordo::tag_t<I>{})));
 
 template <typename T, typename I, typename Rep, auto K>
 constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto& rec,
