@@ -71,7 +71,7 @@ struct mirror_variant final {
   using subscript_map =
       decltype(mirror_variant_make_options(::cordo::tag_t<T>{}, Options{}));
   using subscript_keys =
-      decltype(::cordo_internal_mirror::mirror_struct_eval_keys(
+      decltype(cordo::cordo_internal_mirror::mirror_struct_eval_keys(
           subscript_map{}));
 };
 

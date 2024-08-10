@@ -11,6 +11,7 @@
 #include "cordo/impl/core/meta.hh"
 #include "cordo/impl/mirror.hh"
 
+namespace cordo {
 namespace cordo_internal_mirror {
 template <typename T>
 concept primitive = std::integral<T> || std::floating_point<T>;
@@ -68,21 +69,19 @@ struct mirror_primitive final {
 static_assert(std::is_same_v<typename mirror_primitive<int>::name,
                              cordo::make_key<::cordo::cstring("i32")>>);
 
+template <primitive T>
+constexpr auto customize(decltype(mirror_traits_ctor),
+                         ::cordo::tag_t<T>) noexcept {
+  return mirror_primitive<T>{};
+}
+
+template <primitive T>
+constexpr auto customize(decltype(mirror_traits_of_const),
+                         mirror_primitive<T>) noexcept {
+  return mirror_primitive<const T>{};
+}
+
 }  // namespace cordo_internal_mirror
 
-namespace cordo_internal_cpo {
-
-template <::cordo_internal_mirror::primitive T>
-constexpr auto customize(decltype(::cordo::mirror_traits_ctor), adl_tag,
-                         ::cordo::tag_t<T>) noexcept {
-  return ::cordo_internal_mirror::mirror_primitive<T>{};
-}
-
-template <::cordo_internal_mirror::primitive T>
-constexpr auto customize(
-    decltype(::cordo::mirror_traits_of_const), adl_tag,
-    ::cordo_internal_mirror::mirror_primitive<T>) noexcept {
-  return ::cordo_internal_mirror::mirror_primitive<const T>{};
-}
-
-}  // namespace cordo_internal_cpo
+using cordo_internal_mirror::mirror_primitive;
+}  // namespace cordo

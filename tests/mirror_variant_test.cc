@@ -27,11 +27,11 @@ using Var_m = ::cordo_internal_mirror::mirror_variant<
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Foo> v) noexcept {
-  return ::cordo_internal_mirror::mirror_struct<Foo, Foo_map>{};
+  return cordo::mirror_struct<Foo, Foo_map>{};
 }
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Bar> v) noexcept {
-  return cordo_internal_mirror::mirror_struct<Bar, Bar_map>{};
+  return cordo::mirror_struct<Bar, Bar_map>{};
 }
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Var> v) noexcept {

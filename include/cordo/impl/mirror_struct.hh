@@ -12,6 +12,7 @@
 #include "cordo/impl/core/reflect.hh"
 #include "cordo/impl/mirror.hh"
 
+namespace cordo {
 namespace cordo_internal_mirror {
 
 inline constexpr struct {
@@ -53,22 +54,13 @@ struct mirror_struct_access_t final {
   }
 };
 inline constexpr ::cordo::algo<mirror_struct_access_t> mirror_struct_access;
-}  // namespace cordo_internal_mirror
-
-namespace cordo {
-using ::cordo_internal_mirror::mirror_struct_access;
-}  // namespace cordo
-
-namespace cordo_internal_cpo {
 
 template <typename T, typename Map, typename EH, auto K>
-constexpr decltype(auto) customize(
-    decltype(::cordo::mirror_subscript_key), adl_tag,
-    ::cordo::mirror_core<::cordo_internal_mirror::mirror_struct<T, Map>, EH>&
-        core,
-    ::cordo::key_t<K> k)
+constexpr decltype(auto) customize(decltype(mirror_subscript_key),
+                                   mirror_core<mirror_struct<T, Map>, EH>& core,
+                                   ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
-        ::cordo::mirror_struct_access(
+        mirror_struct_access(
             core.value,
             ::cordo::kv_lookup(
                 typename decltype(core.traits())::subscript_map{}, k)),
@@ -76,22 +68,22 @@ constexpr decltype(auto) customize(
 
 template <typename T, typename Map, typename EH, auto K>
 constexpr decltype(auto) customize(
-    decltype(::cordo::mirror_subscript_key), adl_tag,
-    const ::cordo::mirror_core<::cordo_internal_mirror::mirror_struct<T, Map>,
-                               EH>& core,
-    ::cordo::key_t<K> k)
+    decltype(mirror_subscript_key),
+    const mirror_core<mirror_struct<T, Map>, EH>& core, ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
-        ::cordo::mirror_struct_access(
+        mirror_struct_access(
             core.value,
             ::cordo::kv_lookup(
                 typename decltype(core.traits())::subscript_map{}, k)),
         EH{}));
 
 template <typename T, typename Map>
-constexpr auto customize(
-    decltype(::cordo::mirror_traits_of_const), adl_tag,
-    ::cordo_internal_mirror::mirror_struct<T, Map>) noexcept {
-  return ::cordo_internal_mirror::mirror_struct<const T, Map>{};
+constexpr auto customize(decltype(mirror_traits_of_const),
+                         mirror_struct<T, Map>) noexcept {
+  return mirror_struct<const T, Map>{};
 }
 
-}  // namespace cordo_internal_cpo
+}  // namespace cordo_internal_mirror
+
+using cordo_internal_mirror::mirror_struct;
+}  // namespace cordo

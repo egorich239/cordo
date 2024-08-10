@@ -8,6 +8,7 @@
 #include "cordo/impl/core/meta.hh"
 #include "cordo/impl/mirror_result.hh"
 
+namespace cordo {
 namespace cordo_internal_mirror {
 
 template <typename Traits>
@@ -234,18 +235,17 @@ struct mirror_fn final {
 };
 }  // namespace cordo_internal_mirror
 
-namespace cordo {
-using ::cordo_internal_mirror::mirror_api;
-using ::cordo_internal_mirror::mirror_core;
+using cordo_internal_mirror::mirror_api;
+using cordo_internal_mirror::mirror_core;
 
-using ::cordo_internal_mirror::mirror_traits_ctor;
-using ::cordo_internal_mirror::mirror_traits_name;
-using ::cordo_internal_mirror::mirror_traits_of_const;
-using ::cordo_internal_mirror::mirror_traits_subscript_keys;
+using cordo_internal_mirror::mirror_traits_ctor;
+using cordo_internal_mirror::mirror_traits_name;
+using cordo_internal_mirror::mirror_traits_of_const;
+using cordo_internal_mirror::mirror_traits_subscript_keys;
 
-using ::cordo_internal_mirror::mirror_assign;
-using ::cordo_internal_mirror::mirror_subscript_key;
-using ::cordo_internal_mirror::mirror_unwrap;
+using cordo_internal_mirror::mirror_assign;
+using cordo_internal_mirror::mirror_subscript_key;
+using cordo_internal_mirror::mirror_unwrap;
 
-inline constexpr ::cordo_internal_mirror::mirror_fn mirror{};
+inline constexpr cordo_internal_mirror::mirror_fn mirror{};
 }  // namespace cordo
