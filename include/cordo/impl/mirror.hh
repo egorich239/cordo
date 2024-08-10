@@ -39,22 +39,6 @@ struct mirror_impl_t final {
   rep_t value;
 };
 
-struct make_mirror_impl_fn final {
-  template <typename..., mirror_traits Traits, typename EH>
-  constexpr auto operator()(EH, Traits, typename Traits::rep&& value) const
-      noexcept(std::is_nothrow_move_constructible_v<typename Traits::rep&&>) {
-    return mirror_impl_t<Traits, EH>{(typename Traits::rep&&)value};
-  }
-
-  template <typename..., mirror_traits Tr0, mirror_traits Traits, typename EH>
-  constexpr auto operator()(const mirror_impl_t<Tr0, EH>&, Traits,
-                            typename Traits::rep&& value) const
-      noexcept(std::is_nothrow_move_constructible_v<typename Traits::rep&&>) {
-    return mirror_impl_t<Traits, EH>{(typename Traits::rep&&)value};
-  }
-};
-inline constexpr make_mirror_impl_fn make_mirror_impl{};
-
 template <typename T>
 struct mirror_unsupported final {
   using t = T;
@@ -142,6 +126,26 @@ inline constexpr ::cordo::algo_t<mirror_assign_t{}> mirror_assign;
 inline constexpr ::cordo::algo_t<mirror_subscript_key_core_t{}>
     mirror_subscript_key;
 inline constexpr ::cordo::algo_t<mirror_unwrap_core_t{}> mirror_unwrap;
+
+struct make_mirror_impl_fn final {
+  template <typename..., mirror_traits Traits, typename EH>
+  constexpr auto operator()(EH, Traits, typename Traits::rep&& value) const
+      noexcept(std::is_nothrow_move_constructible_v<typename Traits::rep&&>) {
+    return mirror_impl_t<Traits, EH>{(typename Traits::rep&&)value};
+  }
+
+  template <typename..., mirror_traits Tr0, mirror_traits Traits, typename EH>
+  constexpr auto operator()(const mirror_impl_t<Tr0, EH>&, Traits,
+                            typename Traits::rep&& value) const
+      noexcept(std::is_nothrow_move_constructible_v<typename Traits::rep&&>) {
+    return mirror_impl_t<Traits, EH>{(typename Traits::rep&&)value};
+  }
+
+  template <typename..., typename Ctx, typename T>
+  constexpr auto operator()(Ctx&& ctx, T&& v) const CORDO_INTERNAL_RETURN_(
+      (*this)((Ctx&&)ctx, mirror_traits_ctor(::cordo::tag_t<T>{}), (T&&)v));
+};
+inline constexpr make_mirror_impl_fn make_mirror_impl{};
 
 template <mirror_traits Traits, typename EH>
 class mirror_api final {
