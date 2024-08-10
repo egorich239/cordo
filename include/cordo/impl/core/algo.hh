@@ -23,15 +23,18 @@ struct algo final {
     friend constexpr auto customize(trigger, cordo::overload_prio_t<2>,
                                     const algo &a, Args &&...args)
         CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
-    template <typename... Args>
-    friend constexpr auto customize(trigger, cordo::overload_prio_t<1>,
-                                    const algo &a, Args &&...args)
-        CORDO_INTERNAL_ALIAS_(customize(core_t{}, a, (Args &&)args...));
 
     template <typename... Args>
-    constexpr auto operator()(cordo::overload_prio_t<0>, const algo &a,
+    constexpr auto operator()(cordo::overload_prio_t<1>, const algo &a,
                               Args &&...args) const
-        CORDO_INTERNAL_ALIAS_(A{}(a, (Args &&)args...));
+        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(A{}, a,
+                                                           (Args &&)args...));
+                                                           
+    template <typename... Args>
+    constexpr auto operator()(cordo::overload_prio_t<0>, const algo &,
+                              Args &&...args) const
+        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(A{},
+                                                           (Args &&)args...));
   };
 
  public:

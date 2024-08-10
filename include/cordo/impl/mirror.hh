@@ -41,16 +41,14 @@ struct mirror_traits_ctor_core_t final {
   // every field will get a trait, worst case it will be unsupported.
   // This however still allows us to later filter them with cordo::skip().
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_core_t>&,
-                            ::cordo::tag_t<T>) const noexcept {
+  constexpr auto operator()(::cordo::tag_t<T>) const noexcept {
     return mirror_unsupported<T>{};
   }
 
   template <typename T>
-  constexpr auto operator()(
-      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
-      ::cordo::tag_t<T&>) const
-      CORDO_INTERNAL_ALIAS_(algo(::cordo::tag_t<T>{}));
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_core_t>& rec,
+                            ::cordo::tag_t<T&>) const
+      CORDO_INTERNAL_ALIAS_(rec(::cordo::tag_t<T>{}));
 
   template <typename T>
   constexpr auto operator()(
@@ -60,9 +58,7 @@ struct mirror_traits_ctor_core_t final {
 
   // TODO: mirror_inlined?
   template <typename T>
-  constexpr auto operator()(
-      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
-      ::cordo::tag_t<T&&>) const noexcept = delete;
+  constexpr auto operator()(::cordo::tag_t<T&&>) const noexcept = delete;
 };
 
 struct mirror_traits_name_t final {
@@ -78,8 +74,7 @@ struct mirror_traits_name_t final {
 
  public:
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_name_t>&,
-                            T v) const noexcept {
+  constexpr auto operator()(T v) const noexcept {
     return this->resolve(::cordo::overload_prio_t<1>{}, v);
   }
 };
@@ -97,15 +92,13 @@ struct mirror_traits_subscript_keys_core_t final {
 
  public:
   template <typename T>
-  constexpr auto operator()(
-      const ::cordo::algo<mirror_traits_subscript_keys_core_t>&, T v) const
+  constexpr auto operator()(T v) const
       CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<1>{}, v));
 };
 
 struct mirror_assign_t final {
   template <mirror_traits Traits, typename EH, typename U>
-  constexpr decltype(auto) operator()(const ::cordo::algo<mirror_assign_t>&,
-                                      mirror_core<Traits, EH>& core,
+  constexpr decltype(auto) operator()(mirror_core<Traits, EH>& core,
                                       U&& value) const
       CORDO_INTERNAL_RETURN_(core.value = (U&&)value);
 };
