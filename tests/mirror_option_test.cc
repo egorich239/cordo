@@ -25,13 +25,13 @@ constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
 
 TEST(Optional, UniquePtr) {
   std::unique_ptr<int> x = std::make_unique<int>(2);
-  cordo::mirror_api_t m = ::cordo::mirror(x);
+  cordo::mirror_t m = ::cordo::mirror(x);
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
 }
 
 TEST(Optional, UniquePtrOfStruct) {
   std::unique_ptr<Li> x = std::make_unique<Li>(Li{.head = 2, .tail = nullptr});
-  cordo::mirror_api_t m = ::cordo::mirror(x);
+  cordo::mirror_t m = ::cordo::mirror(x);
   Li& s = m.unwrap().v();
   EXPECT_THAT(s, ::testing::Ref(*x));
   EXPECT_THAT(m.unwrap().v(), ::testing::Ref(*x));
@@ -50,7 +50,7 @@ TEST(Optional, UniquePtrOfStruct) {
   EXPECT_THAT(m["tail"_key]["head"_key].v(), 3);
 
   const auto& y = x;
-  cordo::mirror_api_t my = ::cordo::mirror(y);
+  cordo::mirror_t my = ::cordo::mirror(y);
   EXPECT_THAT(my.unwrap().v(), ::testing::Ref(*y));
   EXPECT_THAT(my["head"_key].v(), ::testing::Ref(x->head));
   EXPECT_THAT(my["tail"_key].v(), ::testing::Ref(x->tail));
@@ -59,7 +59,7 @@ TEST(Optional, UniquePtrOfStruct) {
 
 TEST(Optional, EhResult) {
   std::unique_ptr<int> x = std::make_unique<int>(2);
-  cordo::mirror_api_t m = ::cordo::mirror(x, cordo::eh_result{});
+  cordo::mirror_t m = ::cordo::mirror(x, cordo::eh_result{});
   ASSERT_TRUE(m.unwrap().ok());
   EXPECT_THAT(m.unwrap().value().v(), ::testing::Ref(*x));
 }

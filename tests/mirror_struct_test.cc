@@ -76,7 +76,7 @@ TEST(MirrorStruct, Mut) {
       .z = '1',
   };
 
-  cordo::mirror_api_t mf = ::cordo::mirror(f);
+  cordo::mirror_t mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
 
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
@@ -94,7 +94,7 @@ TEST(MirrorStruct, Const) {
       .z = '1',
   };
 
-  cordo::mirror_api_t mf = ::cordo::mirror(f);
+  cordo::mirror_t mf = ::cordo::mirror(f);
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
   EXPECT_THAT(mf["y"_key].v(), ::testing::Ref(f.y));

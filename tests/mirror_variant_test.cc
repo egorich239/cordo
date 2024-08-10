@@ -40,20 +40,20 @@ constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
 
 TEST(Variant, Basic) {
   Var x = Foo{.x = 1};
-  cordo::mirror_api_t m = cordo::mirror(x);
+  cordo::mirror_t m = cordo::mirror(x);
   auto mt = typename decltype(m)::traits{};
 
   static_assert(std::is_same_v<decltype(mt)::subscript_map,
                                ::cordo::values_t<("Foo"_key <= (size_t)0),
                                                  ("Bar"_key <= (size_t)1)>>);
-  cordo::mirror_api_t mfoo = m["Foo"_key];
+  cordo::mirror_t mfoo = m["Foo"_key];
   static_assert(std::is_same_v<decltype(::cordo::mirror_traits_subscript_keys(
                                    decltype(mfoo)::traits{})),
                                cordo::types_t<decltype("x"_key)>>);
   EXPECT_THAT(mfoo["x"_key].v(), ::testing::Ref(std::get<Foo>(x).x));
 
   const Var& y = x;
-  cordo::mirror_api_t my = cordo::mirror(y);
+  cordo::mirror_t my = cordo::mirror(y);
   EXPECT_THAT(my["Foo"_key].unwrap().v(), ::testing::Ref(std::get<Foo>(y)));
   EXPECT_THAT(my["Foo"_key]["x"_key].v(), ::testing::Ref(std::get<Foo>(y).x));
 
@@ -70,7 +70,7 @@ TEST(Variant, Basic) {
 
 TEST(Variant, EhResult) {
   Var x = Foo{.x = 1};
-  cordo::mirror_api_t m = cordo::mirror(x, cordo::eh_result{});
+  cordo::mirror_t m = cordo::mirror(x, cordo::eh_result{});
   ASSERT_TRUE(m["Foo"_key].unwrap().ok());
   ASSERT_FALSE(m["Bar"_key].unwrap().ok());
 }
