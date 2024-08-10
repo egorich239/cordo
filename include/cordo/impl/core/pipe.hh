@@ -26,6 +26,7 @@ inline constexpr fallible_get_error_cpo fallible_get_error{};
 
 template <typename T>
 concept fallible2 = requires(T&& v) {
+  cordo::invoke.if_well_formed(fallible_get_factory, (T&&)v);
   {
     cordo::invoke.if_well_formed(fallible_has_value, (T&&)v)
   } -> std::same_as<bool>;

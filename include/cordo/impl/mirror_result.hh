@@ -110,6 +110,12 @@ struct eh_result final {
 };
 
 template <typename T>
+constexpr auto customize(decltype(cordo::fallible_get_factory),
+                         const mirror_result<T>& r) noexcept {
+  return eh_result{};
+}
+
+template <typename T>
 constexpr decltype(auto) customize(decltype(cordo::fallible_has_value),
                                    const mirror_result<T>& r) noexcept {
   return r.ok();
