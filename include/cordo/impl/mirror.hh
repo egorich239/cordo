@@ -32,8 +32,8 @@ struct mirror_unsupported final {
   using t = T;
 };
 
-struct mirror_traits_of_const_core_t {};
-inline constexpr ::cordo::algo<mirror_traits_of_const_core_t>
+struct mirror_traits_of_const_core_t final {};
+inline constexpr ::cordo::algo_t<mirror_traits_of_const_core_t{}>
     mirror_traits_of_const;
 
 struct mirror_traits_ctor_core_t final {
@@ -45,16 +45,13 @@ struct mirror_traits_ctor_core_t final {
     return mirror_unsupported<T>{};
   }
 
-  template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_core_t>& rec,
-                            ::cordo::tag_t<T&>) const
+  template <typename T, algo Algo>
+  constexpr auto operator()(const Algo& rec, ::cordo::tag_t<T&>) const
       CORDO_INTERNAL_ALIAS_(rec(::cordo::tag_t<T>{}));
 
-  template <typename T>
-  constexpr auto operator()(
-      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
-      ::cordo::tag_t<const T>) const
-      CORDO_INTERNAL_ALIAS_(mirror_traits_of_const(algo(::cordo::tag_t<T>{})));
+  template <typename T, algo Algo>
+  constexpr auto operator()(const Algo& rec, ::cordo::tag_t<const T>) const
+      CORDO_INTERNAL_ALIAS_(mirror_traits_of_const(rec(::cordo::tag_t<T>{})));
 
   // TODO: mirror_inlined?
   template <typename T>
@@ -107,15 +104,16 @@ struct mirror_subscript_key_core_t final {};
 
 struct mirror_unwrap_core_t final {};
 
-inline constexpr ::cordo::algo<mirror_traits_ctor_core_t> mirror_traits_ctor;
-inline constexpr ::cordo::algo<mirror_traits_name_t> mirror_traits_name;
-inline constexpr ::cordo::algo<mirror_traits_subscript_keys_core_t>
+inline constexpr ::cordo::algo_t<mirror_traits_ctor_core_t{}>
+    mirror_traits_ctor;
+inline constexpr ::cordo::algo_t<mirror_traits_name_t{}> mirror_traits_name;
+inline constexpr ::cordo::algo_t<mirror_traits_subscript_keys_core_t{}>
     mirror_traits_subscript_keys;
 
-inline constexpr ::cordo::algo<mirror_assign_t> mirror_assign;
-inline constexpr ::cordo::algo<mirror_subscript_key_core_t>
+inline constexpr ::cordo::algo_t<mirror_assign_t{}> mirror_assign;
+inline constexpr ::cordo::algo_t<mirror_subscript_key_core_t{}>
     mirror_subscript_key;
-inline constexpr ::cordo::algo<mirror_unwrap_core_t> mirror_unwrap;
+inline constexpr ::cordo::algo_t<mirror_unwrap_core_t{}> mirror_unwrap;
 
 template <mirror_traits Traits, typename EH>
 class mirror_api final {

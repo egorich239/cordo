@@ -10,30 +10,25 @@
 #include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_cpo_core {
-template <typename A>
-struct algo final {
-  static_assert(((void)A{}, true),
-                "algorithm traits must be constexpr-constructible");
-
-  using core_t = A;
-
+template <auto Core>
+struct algo_t final {
  private:
   struct trigger final {
     template <typename... Args>
     friend constexpr auto customize(trigger, cordo::overload_prio_t<2>,
-                                    const algo &a, Args &&...args)
+                                    const algo_t &a, Args &&...args)
         CORDO_INTERNAL_ALIAS_(customize(a, (Args &&)args...));
 
     template <typename... Args>
-    constexpr auto operator()(cordo::overload_prio_t<1>, const algo &a,
+    constexpr auto operator()(cordo::overload_prio_t<1>, const algo_t &a,
                               Args &&...args) const
-        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(A{}, a,
+        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(Core, a,
                                                            (Args &&)args...));
-                                                           
+
     template <typename... Args>
-    constexpr auto operator()(cordo::overload_prio_t<0>, const algo &,
+    constexpr auto operator()(cordo::overload_prio_t<0>, const algo_t &,
                               Args &&...args) const
-        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(A{},
+        CORDO_INTERNAL_ALIAS_(cordo::invoke.if_well_formed(Core,
                                                            (Args &&)args...));
   };
 
@@ -50,8 +45,22 @@ struct algo final {
   constexpr auto operator()(...) const = delete;
 };
 
+struct algo_concept_impl final {
+  template <auto V>
+  constexpr bool is_algo(cordo::tag_t<algo_t<V>>) noexcept {
+    return true;
+  }
+  constexpr bool is_algo(...) noexcept { return false; }
+};
+
+template <typename T>
+concept algo = algo_concept_impl{}.is_algo(cordo::tag_t<T>{});
+
+static_assert(!algo<int>);
+static_assert(algo<algo_t<[] {}>>);
 }  // namespace cordo_internal_cpo_core
 
 namespace cordo {
 using ::cordo_internal_cpo_core::algo;
+using ::cordo_internal_cpo_core::algo_t;
 }  // namespace cordo

@@ -24,10 +24,12 @@ struct mirror_variant_size_core_t final {};
 struct mirror_variant_index_core_t final {};
 struct mirror_variant_get_core_t final {};
 
-inline constexpr ::cordo::algo<mirror_variant_size_core_t> mirror_variant_size;
-inline constexpr ::cordo::algo<mirror_variant_index_core_t>
+inline constexpr ::cordo::algo_t<mirror_variant_size_core_t{}>
+    mirror_variant_size;
+inline constexpr ::cordo::algo_t<mirror_variant_index_core_t{}>
     mirror_variant_index;
-inline constexpr ::cordo::algo<mirror_variant_get_core_t> mirror_variant_get;
+inline constexpr ::cordo::algo_t<mirror_variant_get_core_t{}>
+    mirror_variant_get;
 
 inline constexpr struct {
  private:

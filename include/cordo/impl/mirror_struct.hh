@@ -49,7 +49,7 @@ struct mirror_struct_access_core_t final {
     return s.*f;
   }
 };
-inline constexpr ::cordo::algo<mirror_struct_access_core_t>
+inline constexpr ::cordo::algo_t<mirror_struct_access_core_t{}>
     mirror_struct_access;
 
 template <typename T, typename Map, typename EH, auto K>

@@ -18,24 +18,20 @@ struct adl_tag {};
 }  // namespace n1
 
 struct algo1_traits {
-  constexpr auto operator()(const cordo::algo<algo1_traits>&,
-                            std::string_view) const {
-    return 1;
-  }
+  constexpr auto operator()(std::string_view) const { return 1; }
 };
-inline constexpr ::cordo::algo<algo1_traits> algo1{};
+inline constexpr ::cordo::algo_t<algo1_traits{}> algo1{};
 
 struct Foo {};
 constexpr auto customize(decltype(algo1), Foo) { return 2; }
 
 struct algo3_traits {
-  template <typename... T>
-  constexpr auto operator()(const cordo::algo<algo3_traits>&,
-                            T... v) const noexcept {
+  template <cordo::algo Algo, typename... T>
+  constexpr auto operator()(Algo, T... v) const noexcept {
     return (0 + ... + v);
   }
 };
-inline constexpr ::cordo::algo<algo3_traits> algo3{};
+inline constexpr ::cordo::algo_t<algo3_traits{}> algo3{};
 
 struct Bar {
   constexpr int bar(int x) const { return x + 4; }
