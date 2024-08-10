@@ -115,9 +115,8 @@ struct mirror_traits_subscript_keys_core_t final {
 };
 
 struct mirror_assign_t final {
-  template <mirror_traits Traits, typename EH, typename U>
-  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>& core,
-                                      U&& value) const
+  template <mirror_traits Traits, typename U>
+  constexpr decltype(auto) operator()(Traits, auto& core, U&& value) const
       CORDO_INTERNAL_RETURN_(core.value = (U&&)value);
 };
 
@@ -201,6 +200,11 @@ class mirror_api final {
  public:
   using traits = Traits;
 
+  constexpr mirror_api(mirror_api&&) = default;
+  constexpr mirror_api(const mirror_api&) = default;
+  constexpr mirror_api& operator=(mirror_api&&) = default;
+  constexpr mirror_api& operator=(const mirror_api&) = default;
+
   explicit constexpr mirror_api(core_t&& core) noexcept(
       std::is_nothrow_move_constructible_v<core_t>)
       : core_{(core_t&&)core} {}
@@ -227,16 +231,17 @@ class mirror_api final {
                                                mirror_unwrap) |
                              cordo::piped(mirror_api::make_api));
 
-  constexpr mirror_api(mirror_api&&) = default;
-  constexpr mirror_api(const mirror_api&) = default;
-  constexpr mirror_api& operator=(mirror_api&&) = default;
-  constexpr mirror_api& operator=(const mirror_api&) = default;
-
   template <typename..., typename U,
             typename = std::enable_if_t<
                 !std::is_same_v<std::remove_cvref_t<U>, mirror_api>>>
-  constexpr auto operator=(U&& v)
-      CORDO_INTERNAL_ALIAS_(((void)mirror_assign(this->core(), (U&&)v)), *this);
+  constexpr auto operator=(U&& v) noexcept(
+      noexcept(mirror_impl_apply(this->core(), mirror_assign, (U&&)v)))
+      -> decltype(((void)mirror_impl_apply(this->core(), mirror_assign,
+                                           (U&&)v)),
+                  *this) {
+    mirror_impl_apply(this->core(), mirror_assign, (U&&)v);
+    return *this;
+  }
 
   template <auto K>
   constexpr auto operator[](::cordo::key_t<K> k) const
