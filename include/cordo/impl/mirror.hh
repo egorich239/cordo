@@ -178,8 +178,22 @@ struct make_mirror_error_fn final {
 };
 inline constexpr make_mirror_error_fn make_mirror_error{};
 
+template <typename Impl>
+class mirror_api;
+
+struct make_mirror_api_fn final {
+  template <mirror_traits Traits, typename EH>
+  constexpr decltype(auto) operator()(mirror_impl_t<Traits, EH>&& impl) const
+      noexcept(
+          std::is_nothrow_constructible_v<mirror_api<mirror_impl_t<Traits, EH>>,
+                                          mirror_impl_t<Traits, EH>&&>) {
+    return mirror_api<mirror_impl_t<Traits, EH>>{std::move(impl)};
+  }
+};
+inline constexpr make_mirror_api_fn make_mirror_api{};
+
 template <mirror_traits Traits, typename EH>
-class mirror_api final {
+class mirror_api<mirror_impl_t<Traits, EH>> final {
   using T = typename Traits::t;
   using rep = typename Traits::rep;
   using core_t = mirror_impl_t<Traits, EH>;
@@ -189,14 +203,6 @@ class mirror_api final {
   constexpr core_t& core() noexcept { return core_; }
 
   // TODO: inspirational goal: subscript(non-key-index)
-
-  static constexpr struct make_api_fn final {
-    template <typename T2, typename EH2>
-    constexpr auto operator()(mirror_impl_t<T2, EH2>&& core) const noexcept {
-      return mirror_api<T2, EH2>{(mirror_impl_t<T2, EH2>&&)core};
-    }
-  } make_api{};
-
  public:
   using traits = Traits;
 
@@ -224,12 +230,12 @@ class mirror_api final {
   constexpr decltype(auto) unwrap()
       CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
                                                mirror_unwrap) |
-                             cordo::piped(mirror_api::make_api));
+                             cordo::piped(make_mirror_api));
   template <typename..., typename S = const mirror_api&>
   constexpr decltype(auto) unwrap() const
       CORDO_INTERNAL_RETURN_(mirror_impl_apply(static_cast<S>(*this).core(),
                                                mirror_unwrap) |
-                             cordo::piped(mirror_api::make_api));
+                             cordo::piped(make_mirror_api));
 
   template <typename..., typename U,
             typename = std::enable_if_t<
@@ -247,16 +253,14 @@ class mirror_api final {
   constexpr auto operator[](::cordo::key_t<K> k) const
       CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
                                               mirror_subscript_key, k) |
-                            cordo::piped(mirror_api::make_api));
+                            cordo::piped(make_mirror_api));
 
   template <auto K>
   constexpr auto operator[](::cordo::key_t<K> k)
       CORDO_INTERNAL_ALIAS_(mirror_impl_apply(this->core(),
                                               mirror_subscript_key, k) |
-                            cordo::piped(mirror_api::make_api));
+                            cordo::piped(make_mirror_api));
 };
-template <typename Traits, typename EH>
-mirror_api(mirror_impl_t<Traits, EH>&&) -> mirror_api<Traits, EH>;
 
 struct mirror_fn final {
   template <typename T>
@@ -272,8 +276,9 @@ struct mirror_fn final {
       CORDO_INTERNAL_RETURN_(make_mirror_impl(EH{}, (T&&)v));
 
   template <typename T, typename EH = cordo::eh_terminate>
-  constexpr auto operator()(T&& v, EH eh = {}) const CORDO_INTERNAL_RETURN_(
-      mirror_api<decltype(this->traits((T&&)v)), EH>(this->core((T&&)v, eh)));
+  constexpr auto operator()(T&& v, EH eh = {}) const
+      CORDO_INTERNAL_RETURN_(this->core((T&&)v, eh) |
+                             cordo::piped(make_mirror_api));
 };
 }  // namespace cordo_internal_mirror
 
