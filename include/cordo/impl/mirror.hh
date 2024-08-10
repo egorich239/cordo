@@ -32,33 +32,37 @@ struct mirror_unsupported final {
   using t = T;
 };
 
-struct mirror_traits_of_const_t {};
-inline constexpr ::cordo::algo<mirror_traits_of_const_t> mirror_traits_of_const;
+struct mirror_traits_of_const_core_t {};
+inline constexpr ::cordo::algo<mirror_traits_of_const_core_t>
+    mirror_traits_of_const;
 
-struct mirror_traits_ctor_t final {
+struct mirror_traits_ctor_core_t final {
   // The idea of unsupported type is to simplify codegens for structs:
   // every field will get a trait, worst case it will be unsupported.
   // This however still allows us to later filter them with cordo::skip().
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>&,
+  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_core_t>&,
                             ::cordo::tag_t<T>) const noexcept {
     return mirror_unsupported<T>{};
   }
 
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
-                            ::cordo::tag_t<T&>) const
+  constexpr auto operator()(
+      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
+      ::cordo::tag_t<T&>) const
       CORDO_INTERNAL_ALIAS_(algo(::cordo::tag_t<T>{}));
 
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
-                            ::cordo::tag_t<const T>) const
+  constexpr auto operator()(
+      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
+      ::cordo::tag_t<const T>) const
       CORDO_INTERNAL_ALIAS_(mirror_traits_of_const(algo(::cordo::tag_t<T>{})));
 
   // TODO: mirror_inlined?
   template <typename T>
-  constexpr auto operator()(const ::cordo::algo<mirror_traits_ctor_t>& algo,
-                            ::cordo::tag_t<T&&>) const noexcept = delete;
+  constexpr auto operator()(
+      const ::cordo::algo<mirror_traits_ctor_core_t>& algo,
+      ::cordo::tag_t<T&&>) const noexcept = delete;
 };
 
 struct mirror_traits_name_t final {
@@ -80,7 +84,7 @@ struct mirror_traits_name_t final {
   }
 };
 
-struct mirror_traits_subscript_keys_t final {
+struct mirror_traits_subscript_keys_core_t final {
  private:
   template <typename T>
   constexpr auto resolve(::cordo::overload_prio_t<1>, T) const
@@ -94,7 +98,7 @@ struct mirror_traits_subscript_keys_t final {
  public:
   template <typename T>
   constexpr auto operator()(
-      const ::cordo::algo<mirror_traits_subscript_keys_t>&, T v) const
+      const ::cordo::algo<mirror_traits_subscript_keys_core_t>&, T v) const
       CORDO_INTERNAL_ALIAS_(this->resolve(::cordo::overload_prio_t<1>{}, v));
 };
 
@@ -106,18 +110,19 @@ struct mirror_assign_t final {
       CORDO_INTERNAL_RETURN_(core.value = (U&&)value);
 };
 
-struct mirror_subscript_key_t final {};
+struct mirror_subscript_key_core_t final {};
 
-struct mirror_unwrap_t final {};
+struct mirror_unwrap_core_t final {};
 
-inline constexpr ::cordo::algo<mirror_traits_ctor_t> mirror_traits_ctor;
+inline constexpr ::cordo::algo<mirror_traits_ctor_core_t> mirror_traits_ctor;
 inline constexpr ::cordo::algo<mirror_traits_name_t> mirror_traits_name;
-inline constexpr ::cordo::algo<mirror_traits_subscript_keys_t>
+inline constexpr ::cordo::algo<mirror_traits_subscript_keys_core_t>
     mirror_traits_subscript_keys;
 
 inline constexpr ::cordo::algo<mirror_assign_t> mirror_assign;
-inline constexpr ::cordo::algo<mirror_subscript_key_t> mirror_subscript_key;
-inline constexpr ::cordo::algo<mirror_unwrap_t> mirror_unwrap;
+inline constexpr ::cordo::algo<mirror_subscript_key_core_t>
+    mirror_subscript_key;
+inline constexpr ::cordo::algo<mirror_unwrap_core_t> mirror_unwrap;
 
 template <mirror_traits Traits, typename EH>
 class mirror_api final {

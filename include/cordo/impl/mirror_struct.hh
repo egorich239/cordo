@@ -38,23 +38,24 @@ struct mirror_struct final {
   using subscript_keys = decltype(mirror_struct_eval_keys(Map{}));
 };
 
-struct mirror_struct_access_t final {
+struct mirror_struct_access_core_t final {
   template <typename T, typename F>
-  constexpr auto operator()(const ::cordo::algo<mirror_struct_access_t>&, T& s,
-                            F T::*f) const noexcept -> decltype(s.*f) {
+  constexpr auto operator()(const ::cordo::algo<mirror_struct_access_core_t>&,
+                            T& s, F T::*f) const noexcept -> decltype(s.*f) {
     return s.*f;
   }
   template <typename T, typename F>
-  constexpr auto operator()(const ::cordo::algo<mirror_struct_access_t>&,
+  constexpr auto operator()(const ::cordo::algo<mirror_struct_access_core_t>&,
                             const T& s,
                             F T::*f) const noexcept -> decltype(s.*f) {
     return s.*f;
   }
 };
-inline constexpr ::cordo::algo<mirror_struct_access_t> mirror_struct_access;
+inline constexpr ::cordo::algo<mirror_struct_access_core_t>
+    mirror_struct_access;
 
 template <typename T, typename Map, typename EH, auto K>
-constexpr decltype(auto) customize(decltype(mirror_subscript_key),
+constexpr decltype(auto) customize(mirror_subscript_key_core_t,
                                    mirror_core<mirror_struct<T, Map>, EH>& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
@@ -66,7 +67,7 @@ constexpr decltype(auto) customize(decltype(mirror_subscript_key),
 
 template <typename T, typename Map, typename EH, auto K>
 constexpr decltype(auto) customize(
-    decltype(mirror_subscript_key),
+    mirror_subscript_key_core_t,
     const mirror_core<mirror_struct<T, Map>, EH>& core, ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(::cordo::mirror.core(
         mirror_struct_access(
@@ -76,7 +77,7 @@ constexpr decltype(auto) customize(
         EH{}));
 
 template <typename T, typename Map>
-constexpr auto customize(decltype(mirror_traits_of_const),
+constexpr auto customize(mirror_traits_of_const_core_t,
                          mirror_struct<T, Map>) noexcept {
   return mirror_struct<const T, Map>{};
 }

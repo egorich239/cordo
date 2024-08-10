@@ -20,13 +20,14 @@
 namespace cordo {
 namespace cordo_internal_mirror {
 
-struct mirror_variant_size_t final {};
-struct mirror_variant_index_t final {};
-struct mirror_variant_get_t final {};
+struct mirror_variant_size_core_t final {};
+struct mirror_variant_index_core_t final {};
+struct mirror_variant_get_core_t final {};
 
-inline constexpr ::cordo::algo<mirror_variant_size_t> mirror_variant_size;
-inline constexpr ::cordo::algo<mirror_variant_index_t> mirror_variant_index;
-inline constexpr ::cordo::algo<mirror_variant_get_t> mirror_variant_get;
+inline constexpr ::cordo::algo<mirror_variant_size_core_t> mirror_variant_size;
+inline constexpr ::cordo::algo<mirror_variant_index_core_t>
+    mirror_variant_index;
+inline constexpr ::cordo::algo<mirror_variant_get_core_t> mirror_variant_get;
 
 inline constexpr struct {
  private:
@@ -102,14 +103,14 @@ struct mirror_variant_option final {
 
 // mirror_variant
 template <typename T, typename Options>
-constexpr auto customize(decltype(mirror_traits_of_const),
+constexpr auto customize(mirror_traits_of_const_core_t,
                          mirror_variant<T, Options>) noexcept {
   return mirror_variant<const T, Options>{};
 }
 
 template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
-    decltype(mirror_subscript_key),
+    mirror_subscript_key_core_t,
     mirror_core<mirror_variant<T, Options>, EH>& core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
@@ -122,7 +123,7 @@ constexpr decltype(auto) customize(
 
 template <typename T, typename Options, typename EH, auto K>
 constexpr decltype(auto) customize(
-    decltype(mirror_subscript_key),
+    mirror_subscript_key_core_t,
     const mirror_core<mirror_variant<T, Options>, EH>& core,
     ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
@@ -136,7 +137,7 @@ constexpr decltype(auto) customize(
 // mirror_variant_option
 template <typename Traits, typename F, size_t I>
 constexpr auto customize(
-    decltype(mirror_traits_ctor),
+    mirror_traits_ctor_core_t,
     ::cordo::tag_t<mirror_variant_option<Traits, F, I>&&>) noexcept {
   using Opt = mirror_variant_option<Traits, F, I>;
   return mirror_option<Opt, F, Opt>{};
@@ -144,7 +145,7 @@ constexpr auto customize(
 
 template <typename..., typename Traits, typename F, size_t I,
           typename Opt = mirror_variant_option<Traits, F, I>>
-constexpr auto customize(decltype(mirror_traits_of_const),
+constexpr auto customize(mirror_traits_of_const_core_t,
                          mirror_option<Opt, F, Opt>) noexcept {
   using OptC = mirror_variant_option<Traits, const F, I>;
   return mirror_option<OptC, const F, OptC>{};
@@ -152,35 +153,36 @@ constexpr auto customize(decltype(mirror_traits_of_const),
 
 template <typename Traits, typename F, size_t I>
 constexpr auto customize(
-    decltype(mirror_traits_subscript_keys) algo,
+    mirror_traits_subscript_keys_core_t,
     mirror_option<mirror_variant_option<Traits, F, I>, F,
                   mirror_variant_option<Traits, F, I>>) noexcept {
-  return algo(typename decltype(::cordo::mirror(std::declval<F>()))::traits{});
+  return ::cordo::algo<mirror_traits_subscript_keys_core_t>{}(
+      typename decltype(::cordo::mirror(std::declval<F>()))::traits{});
 }
 
 // std::variant
 template <typename... T>
-constexpr auto customize(decltype(mirror_variant_size),
+constexpr auto customize(mirror_variant_size_core_t,
                          ::cordo::tag_t<std::variant<T...>>) noexcept {
   return sizeof...(T);
 }
 
 template <typename... T, size_t I>
-constexpr decltype(auto) customize(decltype(mirror_variant_get),
+constexpr decltype(auto) customize(mirror_variant_get_core_t,
                                    std::variant<T...>& v,
                                    ::cordo::value_t<I>) noexcept {
   return std::get<I>(v);
 }
 
 template <typename... T, size_t I>
-constexpr decltype(auto) customize(decltype(mirror_variant_get),
+constexpr decltype(auto) customize(mirror_variant_get_core_t,
                                    const std::variant<T...>& v,
                                    ::cordo::value_t<I>) noexcept {
   return std::get<I>(v);
 }
 
 template <typename... T>
-constexpr auto customize(decltype(mirror_variant_index),
+constexpr auto customize(mirror_variant_index_core_t,
                          std::variant<T...>& v) noexcept {
   return v.index();
 }
