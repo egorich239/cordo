@@ -23,9 +23,7 @@ inline constexpr cordo::cpo_t<sum, n2::adl_tag, n1::adl_tag> sum_algo_n2n1{};
 struct Def final {};
 inline constexpr cordo::cpo_t<Def{}> def_algo{};
 
-int customize(cordo::hook_t<def_algo>) {
-  return 42;
-}
+int customize(cordo::hook_t<def_algo>) { return 42; }
 }  // namespace n3
 
 namespace n4 {
@@ -55,32 +53,30 @@ std::string customize(cordo::hook_t<n3::sum_algo>, std::string x,
 namespace {
 
 TEST(Sum, WithoutTags) {
-  EXPECT_THAT(cordo::cpo_invoke(n3::sum_algo, 2, 3), 5);
-  auto foo = cordo::cpo_invoke(n3::sum_algo, n4::Foo{5}, n4::Foo{-12});
+  EXPECT_THAT(cordo::invoke(n3::sum_algo, 2, 3), 5);
+  auto foo = cordo::invoke(n3::sum_algo, n4::Foo{5}, n4::Foo{-12});
   static_assert(std::is_same_v<decltype(foo), n4::Foo>);
   EXPECT_THAT(foo.x, -7);
 }
 
 TEST(Sum, WithN1) {
-  EXPECT_THAT(cordo::cpo_invoke(n3::sum_algo_n1, 2, 3), 5);
-  auto foo = cordo::cpo_invoke(n3::sum_algo_n1, n4::Foo{5}, n4::Foo{-12});
+  EXPECT_THAT(cordo::invoke(n3::sum_algo_n1, 2, 3), 5);
+  auto foo = cordo::invoke(n3::sum_algo_n1, n4::Foo{5}, n4::Foo{-12});
   static_assert(std::is_same_v<decltype(foo), n4::Foo>);
   EXPECT_THAT(foo.x, -7);
-  std::string res = cordo::cpo_invoke(n3::sum_algo_n1, "lorem", "ipsum");
+  std::string res = cordo::invoke(n3::sum_algo_n1, "lorem", "ipsum");
   EXPECT_THAT(res, testing::StrEq("loremipsum"));
 }
 
 TEST(Sum, WithN2N1) {
-  EXPECT_THAT(cordo::cpo_invoke(n3::sum_algo_n2n1, 2, 3), 5);
-  auto foo = cordo::cpo_invoke(n3::sum_algo_n2n1, n4::Foo{5}, n4::Foo{-12});
+  EXPECT_THAT(cordo::invoke(n3::sum_algo_n2n1, 2, 3), 5);
+  auto foo = cordo::invoke(n3::sum_algo_n2n1, n4::Foo{5}, n4::Foo{-12});
   static_assert(std::is_same_v<decltype(foo), n4::Foo>);
   EXPECT_THAT(foo.x, -7);
-  std::string res = cordo::cpo_invoke(n3::sum_algo_n2n1, "lorem", "ipsum");
+  std::string res = cordo::invoke(n3::sum_algo_n2n1, "lorem", "ipsum");
   EXPECT_THAT(res, testing::StrEq("lorem ipsum"));
 }
 
-TEST(Def, JustSimple) {
-  EXPECT_THAT(cordo::cpo_invoke(n3::def_algo), 42);
-}
+TEST(Def, JustSimple) { EXPECT_THAT(cordo::invoke(n3::def_algo), 42); }
 
 }  // namespace

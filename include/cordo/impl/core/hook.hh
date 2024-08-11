@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cordo/impl/core/algo.hh"
-#include "cordo/impl/core/cpo.hh"
 #include "cordo/impl/core/invoke.hh"
 
 namespace cordo {

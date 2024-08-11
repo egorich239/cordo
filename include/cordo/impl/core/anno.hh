@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/invoke.hh"
 #include "cordo/impl/core/meta.hh"
 
 namespace cordo_internal_anno {

@@ -34,12 +34,10 @@ inline constexpr cpo_t<fallible_get_error_cpo{}, cordo_pipe_extensions::adl_tag>
 
 template <typename T>
 concept fallible = requires(T&& v) {
-  cordo::invoke.if_well_formed(fallible_get_factory, (T&&)v);
-  {
-    cordo::invoke.if_well_formed(fallible_has_value, (T&&)v)
-  } -> std::same_as<bool>;
-  cordo::invoke.if_well_formed(fallible_get_value, (T&&)v);
-  cordo::invoke.if_well_formed(fallible_get_error, (T&&)v);
+  cordo::invoke(fallible_get_factory, (T&&)v);
+  { cordo::invoke(fallible_has_value, (T&&)v) } -> std::same_as<bool>;
+  cordo::invoke(fallible_get_value, (T&&)v);
+  cordo::invoke(fallible_get_error, (T&&)v);
 };
 
 template <typename T>

@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include "cordo/impl/core/algo.hh"
-#include "cordo/impl/core/cpo.hh"
+#include "cordo/impl/core/invoke.hh"
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
@@ -11,8 +11,6 @@
 
 namespace cordo {
 namespace cordo_internal_mirror {
-struct adl_tag final {};
-
 template <typename Traits>
 concept mirror_traits = requires {
   requires std::is_trivial_v<Traits>;
@@ -122,7 +120,7 @@ struct mirror_subscript_key_core_t final {};
 struct mirror_has_value_core_t final {};
 struct mirror_unwrap_core_t final {};
 
-inline constexpr ::cordo::algo_t<cpo_v<mirror_traits_ctor_core_t{}, adl_tag>>
+inline constexpr ::cordo::algo_t<cpo_v<mirror_traits_ctor_core_t{}>>
     mirror_traits_ctor;
 
 template <typename T>
