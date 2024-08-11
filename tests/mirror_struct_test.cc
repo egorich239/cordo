@@ -22,7 +22,7 @@ using SomeStruct_map = ::cordo::values_t<  //
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<SomeStruct>) noexcept {
-  return cordo::mirror_struct<SomeStruct, SomeStruct_map>{};
+  return cordo::mirror_struct_traits<SomeStruct, SomeStruct_map>{};
 }
 };  // namespace cordo_internal_test
 
@@ -35,18 +35,20 @@ using ::cordo_internal_test::SomeStruct_map;
 
 consteval void mirror_struct_name_test() {
   static_assert(std::is_same_v<  //
-                cordo::mirror_struct<SomeStruct, SomeStruct_map>::name,
+                cordo::mirror_struct_traits<SomeStruct, SomeStruct_map>::name,
                 make_key<cstring("SomeStruct")>>);
-  static_assert(std::is_same_v<  //
-                cordo::mirror_struct<const SomeStruct, SomeStruct_map>::name,
-                make_key<cstring("SomeStruct")>>);
-  static_assert(std::is_same_v<  //
-                cordo::mirror_struct<struct Foo, ::cordo::values_t<>>::name,
-                make_key<cstring("Foo")>>);
+  static_assert(
+      std::is_same_v<  //
+          cordo::mirror_struct_traits<const SomeStruct, SomeStruct_map>::name,
+          make_key<cstring("SomeStruct")>>);
+  static_assert(
+      std::is_same_v<  //
+          cordo::mirror_struct_traits<struct Foo, ::cordo::values_t<>>::name,
+          make_key<cstring("Foo")>>);
 }
 
 consteval void mirror_struct_subscipt_keys_test() {
-  using m = cordo::mirror_struct<SomeStruct, SomeStruct_map>;
+  using m = cordo::mirror_struct_traits<SomeStruct, SomeStruct_map>;
   static_assert(std::is_same_v<m::subscript_keys,
                                ::cordo::types_t<       //
                                    decltype("x"_key),  //
@@ -64,7 +66,7 @@ consteval void mirror_struct_subscipt_map_test() {
 }
 
 consteval void mirror_struct_cpo_test() {
-  using m = cordo::mirror_struct<SomeStruct, SomeStruct_map>;
+  using m = cordo::mirror_struct_traits<SomeStruct, SomeStruct_map>;
   static_assert(std::is_same_v<m, decltype(cordo::mirror_traits_ctor(
                                       ::cordo::tag_t<SomeStruct&>{}))>);
 }
@@ -77,6 +79,8 @@ TEST(MirrorStruct, Mut) {
   };
 
   cordo::mirror_t mf = ::cordo::mirror(f);
+  static_assert(cordo::mirror_struct<decltype(mf)>);
+  
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
 
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));
@@ -84,7 +88,7 @@ TEST(MirrorStruct, Mut) {
   EXPECT_THAT(mf["z"_key].v(), ::testing::Ref(f.z));
 
   static_assert(std::is_same_v<typename decltype(mf["x"_key])::traits,
-                               cordo::mirror_primitive<int>>);
+                               cordo::mirror_primitive_traits<int>>);
 }
 
 TEST(MirrorStruct, Const) {
@@ -101,7 +105,7 @@ TEST(MirrorStruct, Const) {
   EXPECT_THAT(mf["z"_key].v(), ::testing::Ref(f.z));
 
   static_assert(std::is_same_v<typename decltype(mf["x"_key])::traits,
-                               cordo::mirror_primitive<const int>>);
+                               cordo::mirror_primitive_traits<const int>>);
 }
 
 }  // namespace

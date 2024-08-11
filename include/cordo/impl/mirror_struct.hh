@@ -26,7 +26,7 @@ inline constexpr struct {
 } mirror_struct_eval_keys{};
 
 template <typename T, typename Map>
-struct mirror_struct final {
+struct mirror_struct_traits final {
   using t = T;
   using rep = T&;
 
@@ -54,7 +54,7 @@ inline constexpr ::cordo::algo_t<mirror_struct_access_core_t{}>
 
 template <typename T, typename Map, auto K>
 constexpr decltype(auto) customize(mirror_subscript_key_core_t,
-                                   mirror_struct<T, Map>, auto&& core,
+                                   mirror_struct_traits<T, Map>, auto&& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(
         core |
@@ -67,11 +67,18 @@ constexpr decltype(auto) customize(mirror_subscript_key_core_t,
 
 template <typename T, typename Map>
 constexpr auto customize(mirror_traits_of_const_core_t,
-                         mirror_struct<T, Map>) noexcept {
-  return mirror_struct<const T, Map>{};
+                         mirror_struct_traits<T, Map>) noexcept {
+  return mirror_struct_traits<const T, Map>{};
 }
 
 }  // namespace cordo_internal_mirror
 
-using cordo_internal_mirror::mirror_struct;
+using cordo_internal_mirror::mirror_struct_traits;
+
+template <typename M>
+concept mirror_struct = requires(typename std::remove_cvref_t<M>::traits t) {
+  requires is_mirror<M>;
+  { mirror_struct_traits{t} } -> std::same_as<decltype(t)>;
+};
+
 }  // namespace cordo

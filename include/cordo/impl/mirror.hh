@@ -13,6 +13,9 @@ namespace cordo_internal_mirror {
 
 template <typename Traits>
 concept mirror_traits = requires {
+  requires std::is_trivial_v<Traits>;
+  requires std::is_standard_layout_v<Traits>;
+
   typename Traits::t;
   requires !std::is_reference_v<typename Traits::t>;
 };
@@ -281,6 +284,14 @@ class mirror_t<mirror_impl_t<Traits, EH>> final {
 };
 
 namespace cordo_internal_mirror {
+struct is_mirror_impl final {
+  template <typename I>
+  static constexpr bool test(cordo::tag_t<cordo::mirror_t<I>>) noexcept {
+    return true;
+  }
+  static constexpr bool test(...) noexcept { return false; }
+};
+
 struct mirror_fn final {
   template <typename T, typename EH = cordo::eh_terminate>
   constexpr auto operator()(T&& v, EH eh = {}) const CORDO_INTERNAL_RETURN_(
@@ -288,6 +299,10 @@ struct mirror_fn final {
       cordo::piped(cordo_internal_mirror::make_mirror_api));
 };
 }  // namespace cordo_internal_mirror
+
+template <typename T>
+concept is_mirror = cordo_internal_mirror::is_mirror_impl::test(
+    cordo::tag_t<std::remove_cvref_t<T>>{});
 
 inline constexpr cordo_internal_mirror::mirror_fn mirror{};
 }  // namespace cordo

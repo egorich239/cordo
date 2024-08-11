@@ -20,7 +20,7 @@ using Li_map =
 
 constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
                          ::cordo::tag_t<Li>) noexcept {
-  return cordo::mirror_struct<Li, Li_map>{};
+  return cordo::mirror_struct_traits<Li, Li_map>{};
 }
 
 TEST(Optional, UniquePtr) {

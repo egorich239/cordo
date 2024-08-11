@@ -55,7 +55,7 @@ inline constexpr struct mirror_primitive_name_t {
 } mirror_primitive_name{};
 
 template <primitive T>
-struct mirror_primitive final {
+struct mirror_primitive_traits final {
   using t = T;
   using rep = T&;
   using name = std::conditional_t<
@@ -66,22 +66,29 @@ struct mirror_primitive final {
   using subscript_keys = ::cordo::null_t;
 };
 
-static_assert(std::is_same_v<typename mirror_primitive<int>::name,
+static_assert(std::is_same_v<typename mirror_primitive_traits<int>::name,
                              cordo::make_key<::cordo::cstring("i32")>>);
 
 template <primitive T>
 constexpr auto customize(mirror_traits_ctor_core_t,
                          ::cordo::tag_t<T>) noexcept {
-  return mirror_primitive<T>{};
+  return mirror_primitive_traits<T>{};
 }
 
 template <primitive T>
 constexpr auto customize(mirror_traits_of_const_core_t,
-                         mirror_primitive<T>) noexcept {
-  return mirror_primitive<const T>{};
+                         mirror_primitive_traits<T>) noexcept {
+  return mirror_primitive_traits<const T>{};
 }
 
 }  // namespace cordo_internal_mirror
 
-using cordo_internal_mirror::mirror_primitive;
+using cordo_internal_mirror::mirror_primitive_traits;
+
+template <typename M>
+concept mirror_primitive = requires(typename std::remove_cvref_t<M>::traits t) {
+  requires is_mirror<M>;
+  { mirror_primitive_traits{t} } -> std::same_as<decltype(t)>;
+};
+
 }  // namespace cordo

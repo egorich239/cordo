@@ -18,7 +18,7 @@ namespace cordo {
 namespace cordo_internal_mirror {
 
 template <typename T, typename I, typename Rep = T&>
-struct mirror_option final {
+struct mirror_option_traits final {
   using t = T;
   using rep = Rep;
   using inner = I;
@@ -27,7 +27,7 @@ struct mirror_option final {
 };
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_unwrap_core_t, mirror_option<T, I, Rep>,
+constexpr auto customize(mirror_unwrap_core_t, mirror_option_traits<T, I, Rep>,
                          auto&& core)
     CORDO_INTERNAL_ALIAS_(
         core.value
@@ -39,12 +39,12 @@ constexpr auto customize(mirror_unwrap_core_t, mirror_option<T, I, Rep>,
 
 template <typename T, typename I, typename Rep>
 constexpr auto customize(mirror_traits_subscript_keys_core_t, const auto& rec,
-                         mirror_option<T, I, Rep> t)
+                         mirror_option_traits<T, I, Rep> t)
     CORDO_INTERNAL_ALIAS_(rec(mirror_traits_ctor(::cordo::tag_t<I>{})));
 
 template <typename T, typename I, typename Rep, auto K>
 constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto& rec,
-                                   mirror_option<T, I, Rep>, auto&& core,
+                                   mirror_option_traits<T, I, Rep>, auto&& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(mirror_impl_apply((decltype(core)&&)core,
                                              mirror_unwrap) |
@@ -53,16 +53,23 @@ constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto& rec,
 template <typename T>
 constexpr auto customize(mirror_traits_ctor_core_t,
                          ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
-  return mirror_option<std::unique_ptr<T>, T&>{};
+  return mirror_option_traits<std::unique_ptr<T>, T&>{};
 }
 
 template <typename T, typename I>
 constexpr auto customize(mirror_traits_of_const_core_t,
-                         mirror_option<T, I, T&>) noexcept {
-  return mirror_option<const T, const I, const T&>{};
+                         mirror_option_traits<T, I, T&>) noexcept {
+  return mirror_option_traits<const T, const I, const T&>{};
 }
 
 }  // namespace cordo_internal_mirror
 
-using cordo_internal_mirror::mirror_option;
+using cordo_internal_mirror::mirror_option_traits;
+
+template <typename M>
+concept mirror_option = requires(typename std::remove_cvref_t<M>::traits t) {
+  requires is_mirror<M>;
+  { mirror_option_traits{t} } -> std::same_as<decltype(t)>;
+};
+
 }  // namespace cordo

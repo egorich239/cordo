@@ -40,23 +40,23 @@ consteval void mirror_primitive_name_test() {
 consteval void mirror_primitive_cpo_test() {
   static_assert(std::is_same_v<  //
                 decltype(cordo::mirror_traits_ctor(::cordo::tag_t<char&>{})),
-                cordo::mirror_primitive<char>>);
+                cordo::mirror_primitive_traits<char>>);
   static_assert(std::is_same_v<  //
                 decltype(cordo::mirror_traits_ctor(::cordo::tag_t<bool&>{})),
-                cordo::mirror_primitive<bool>>);
+                cordo::mirror_primitive_traits<bool>>);
   static_assert(std::is_same_v<  //
                 decltype(cordo::mirror_traits_ctor(::cordo::tag_t<float&>{})),
-                cordo::mirror_primitive<float>>);
+                cordo::mirror_primitive_traits<float>>);
   static_assert(std::is_same_v<  //
                 decltype(cordo::mirror_traits_ctor(::cordo::tag_t<double&>{})),
-                cordo::mirror_primitive<double>>);
+                cordo::mirror_primitive_traits<double>>);
   static_assert(std::is_same_v<  //
                 decltype(cordo::mirror_traits_ctor(::cordo::tag_t<int&>{})),
-                cordo::mirror_primitive<int>>);
+                cordo::mirror_primitive_traits<int>>);
   static_assert(
       std::is_same_v<  //
           decltype(cordo::mirror_traits_ctor(::cordo::tag_t<unsigned&>{})),
-          cordo::mirror_primitive<unsigned>>);
+          cordo::mirror_primitive_traits<unsigned>>);
 }
 
 TEST(MirrorPrimitive, Basic) {
