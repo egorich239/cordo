@@ -17,7 +17,9 @@ namespace cordo_internal_cpo {
 //
 // If any of the customize is missing, they are omitted.
 template <auto Algo, typename... AdlHooks>
-struct cpo_t final {};
+struct cpo_t final {
+  constexpr operator cpo_t<Algo>() const noexcept { return {}; }
+};
 
 template <typename T>
 concept cpo = requires(T&& v) {
@@ -104,27 +106,9 @@ struct cpo_invoke_fn final {
   }
 };
 
-struct hook_impl_t final {
-  template <typename AdlHook, auto Algo, typename... AdlHooks>
-  static constexpr auto impl(cpo_t<Algo, AdlHooks...>,
-                             cordo::tag_t<AdlHook>) noexcept {
-    static_assert((std::is_same_v<AdlHook, AdlHooks> || ...),
-                  "CPO does not support the specified hook");
-    return cpo_t<Algo, AdlHook>{};
-  }
-  template <auto Algo, typename... AdlHooks>
-  static constexpr cpo_t<Algo> impl(cpo_t<Algo, AdlHooks...>) noexcept {
-    return {};
-  }
-};
-
-// TODO: expand hook_t definition to algo.
-template <auto V, typename... P>
-using hook_t = decltype(hook_impl_t::impl(V, cordo::tag_t<P>{}...));
-
 }  // namespace cordo_internal_cpo
 
+using cordo_internal_cpo::cpo;
 using cordo_internal_cpo::cpo_t;
-using cordo_internal_cpo::hook_t;
 inline constexpr cordo_internal_cpo::cpo_invoke_fn cpo_invoke{};
 }  // namespace cordo

@@ -32,14 +32,14 @@ Foo customize(cordo::hook_t<n3::sum_algo>, Foo a, Foo b) {
 }  // namespace n4
 
 namespace n1 {
-std::string customize(cordo::hook_t<n3::sum_algo_n1, adl_tag>, std::string x,
+std::string customize(cordo::hook_t<n3::sum_algo>, std::string x,
                       std::string y) {
   return x + y;
 }
 }  // namespace n1
 
 namespace n2 {
-std::string customize(cordo::hook_t<n3::sum_algo_n2n1, adl_tag>, std::string x,
+std::string customize(cordo::hook_t<n3::sum_algo>, std::string x,
                       std::string y) {
   return x + " " + y;
 }

@@ -10,6 +10,7 @@
 #endif
 
 #include "cordo/impl/core/algo.hh"
+#include "cordo/impl/core/hook.hh"
 #include "cordo/impl/core/invoke.hh"
 #include "cordo/impl/core/pipe.hh"
 

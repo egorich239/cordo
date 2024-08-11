@@ -10,19 +10,27 @@
 #include "cordo/impl/core/meta.hh"
 
 namespace cordo {
+namespace cordo_pipe_extensions {
+struct adl_tag final {};
+}  // namespace cordo_pipe_extensions
 namespace cordo_internal_pipe {
 
 struct fallible_get_factory_cpo final {};
-inline constexpr cpo_t<fallible_get_factory_cpo{}> fallible_get_factory{};
+inline constexpr cpo_t<fallible_get_factory_cpo{},
+                       cordo_pipe_extensions::adl_tag>
+    fallible_get_factory{};
 
 struct fallible_has_value_cpo final {};
-inline constexpr cpo_t<fallible_has_value_cpo{}> fallible_has_value{};
+inline constexpr cpo_t<fallible_has_value_cpo{}, cordo_pipe_extensions::adl_tag>
+    fallible_has_value{};
 
 struct fallible_get_value_cpo final {};
-inline constexpr cpo_t<fallible_get_value_cpo{}> fallible_get_value{};
+inline constexpr cpo_t<fallible_get_value_cpo{}, cordo_pipe_extensions::adl_tag>
+    fallible_get_value{};
 
 struct fallible_get_error_cpo final {};
-inline constexpr cpo_t<fallible_get_error_cpo{}> fallible_get_error{};
+inline constexpr cpo_t<fallible_get_error_cpo{}, cordo_pipe_extensions::adl_tag>
+    fallible_get_error{};
 
 template <typename T>
 concept fallible = requires(T&& v) {
