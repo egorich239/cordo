@@ -125,6 +125,7 @@ struct mirror_assign_t final {
 
 struct mirror_subscript_key_core_t final {};
 
+struct mirror_has_value_core_t final {};
 struct mirror_unwrap_core_t final {};
 
 inline constexpr ::cordo::algo_t<mirror_traits_ctor_core_t{}>
@@ -136,6 +137,8 @@ inline constexpr ::cordo::algo_t<mirror_traits_subscript_keys_core_t{}>
 inline constexpr ::cordo::algo_t<mirror_assign_t{}> mirror_assign;
 inline constexpr ::cordo::algo_t<mirror_subscript_key_core_t{}>
     mirror_subscript_key;
+
+inline constexpr ::cordo::algo_t<mirror_has_value_core_t{}> mirror_has_value;
 inline constexpr ::cordo::algo_t<mirror_unwrap_core_t{}> mirror_unwrap;
 
 struct make_mirror_impl_fn final {
@@ -191,6 +194,7 @@ using cordo_internal_mirror::mirror_traits_of_const;
 using cordo_internal_mirror::mirror_traits_subscript_keys;
 
 using cordo_internal_mirror::mirror_assign;
+using cordo_internal_mirror::mirror_has_value;
 using cordo_internal_mirror::mirror_subscript_key;
 using cordo_internal_mirror::mirror_unwrap;
 
@@ -243,6 +247,11 @@ class mirror_t<mirror_impl_t<Traits, EH>> final {
   {
     return impl_.value;
   }
+
+  template <typename..., typename S = const mirror_t&>
+  constexpr decltype(auto) has_value() const
+      CORDO_INTERNAL_RETURN_(cordo_internal_mirror::mirror_impl_apply(
+          static_cast<S>(*this).impl(), mirror_has_value));
 
   template <typename..., typename S = mirror_t&>
   constexpr decltype(auto) unwrap() CORDO_INTERNAL_RETURN_(

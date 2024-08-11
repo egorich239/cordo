@@ -5,6 +5,7 @@
 #include <concepts>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <type_traits>
 
 #include "cordo/impl/core/algo.hh"
@@ -27,10 +28,15 @@ struct mirror_option_traits final {
 };
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_unwrap_core_t, mirror_option_traits<T, I, Rep>,
-                         auto&& core)
+constexpr auto customize(mirror_has_value_core_t,
+                         mirror_option_traits<T, I, Rep>, auto&& core)
+    CORDO_INTERNAL_ALIAS_(static_cast<bool>(core.value));
+
+template <typename T, typename I, typename Rep>
+constexpr auto customize(mirror_unwrap_core_t,
+                         mirror_option_traits<T, I, Rep> t, auto&& core)
     CORDO_INTERNAL_ALIAS_(
-        core.value
+        mirror_has_value(t, core)
             ? (core |
                cordo::piped(make_mirror_impl, *((decltype(core)&&)core).value) |
                cordo::piped(make_mirror_result))
@@ -54,6 +60,12 @@ template <typename T>
 constexpr auto customize(mirror_traits_ctor_core_t,
                          ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
   return mirror_option_traits<std::unique_ptr<T>, T&>{};
+}
+
+template <typename T>
+constexpr auto customize(mirror_traits_ctor_core_t,
+                         ::cordo::tag_t<std::optional<T>>) noexcept {
+  return mirror_option_traits<std::optional<T>, T&>{};
 }
 
 template <typename T, typename I>

@@ -38,9 +38,27 @@ template <typename T>
 concept not_fallible = !fallible<T>;
 
 struct pipe_then_fn final {
+  template <typename Fn, typename... Args>
+  constexpr decltype(auto) void_guard(Fn&& fn, Args&&... args) const
+      noexcept(noexcept(std::invoke((Fn&&)fn, (Args&&)args...)))
+    requires(!std::is_same_v<std::invoke_result_t<Fn &&, Args && ...>, void>)
+  {
+    return std::invoke((Fn&&)fn, (Args&&)args...);
+  }
+
+  template <typename Fn, typename... Args>
+  constexpr unit_t void_guard(Fn&& fn, Args&&... args) const
+      noexcept(noexcept(std::invoke((Fn&&)fn, (Args&&)args...)))
+    requires(std::is_same_v<std::invoke_result_t<Fn &&, Args && ...>, void>)
+  {
+    std::invoke((Fn&&)fn, (Args&&)args...);
+    return unit;
+  }
+
   template <typename... Args, not_fallible F, std::invocable<F&&, Args&&...> Fn>
   constexpr decltype(auto) operator()(F&& v, Fn&& fn, Args&&... args) const
-      CORDO_INTERNAL_RETURN_(std::invoke((Fn&&)fn, (F&&)v, (Args&&)args...));
+      CORDO_INTERNAL_RETURN_(this->void_guard((Fn&&)fn, (F&&)v,
+                                              (Args&&)args...));
 
   template <typename... Args, fallible F,
             std::invocable<decltype(cordo::invoke(fallible_get_value,
@@ -52,9 +70,9 @@ struct pipe_then_fn final {
           cordo::invoke(fallible_has_value, (F&&)v)
               ? cordo::invoke(fallible_get_factory, (F&&)v)
                     .make_result(
-                        std::invoke((Fn&&)fn,
-                                    cordo::invoke(fallible_get_value, (F&&)v),
-                                    (Args&&)args...),
+                        this->void_guard(
+                            (Fn&&)fn, cordo::invoke(fallible_get_value, (F&&)v),
+                            (Args&&)args...),
                         cordo::tag_t<decltype(cordo::invoke(fallible_get_error,
                                                             (F&&)v))>{})
               : cordo::invoke(fallible_get_factory, (F&&)v)

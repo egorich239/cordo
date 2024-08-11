@@ -47,14 +47,14 @@ struct algo_t final {
 
 struct algo_concept_impl final {
   template <auto V>
-  constexpr bool is_algo(cordo::tag_t<algo_t<V>>) noexcept {
+  static constexpr bool test(cordo::tag_t<algo_t<V>>) noexcept {
     return true;
   }
-  constexpr bool is_algo(...) noexcept { return false; }
+  static constexpr bool test(...) noexcept { return false; }
 };
 
 template <typename T>
-concept algo = algo_concept_impl{}.is_algo(cordo::tag_t<T>{});
+concept algo = algo_concept_impl::test(cordo::tag_t<std::remove_cvref_t<T>>{});
 
 static_assert(!algo<int>);
 static_assert(algo<algo_t<[] {}>>);
