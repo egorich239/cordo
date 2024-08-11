@@ -9,6 +9,7 @@ cc_library(
 
 cc_test(
     name = "cordo_test",
+    size = "small",
     srcs = glob(["tests/*.cc"]),
     copts = ["-std=c++20"],
     deps = [
@@ -16,5 +17,16 @@ cc_test(
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
-    size = "small",
+)
+
+cc_library(
+    name = "cordo_json",
+    hdrs = ["include/cordo_json/cordo_json.hh"],
+    copts = ["-std=c++20"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cordo",
+        "@nlohmann_json",
+    ],
 )

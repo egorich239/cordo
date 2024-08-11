@@ -13,3 +13,7 @@ git_override(
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
     commit = "a14ad3a64e7bf398ab48105aaa0348e032ac87f8",
 )
+
+# for cordo_json
+bazel_dep(name = "fmt", version = "11.0.2")
+bazel_dep(name = "nlohmann_json", version = "3.11.3")
