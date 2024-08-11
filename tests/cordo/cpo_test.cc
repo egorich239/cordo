@@ -68,7 +68,7 @@ TEST(Sum, WithN2N1) {
   auto foo = cordo::cpo_invoke(n3::sum_algo_n2n1, n4::Foo{5}, n4::Foo{-12});
   static_assert(std::is_same_v<decltype(foo), n4::Foo>);
   EXPECT_THAT(foo.x, -7);
-  std::string res = cordo::cpo_invoke(n3::sum_algo_n2n1, "lorem", 2 ) ;//"ipsum");
+  std::string res = cordo::cpo_invoke(n3::sum_algo_n2n1, "lorem", "ipsum");
   EXPECT_THAT(res, testing::StrEq("lorem ipsum"));
 }
 

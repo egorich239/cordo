@@ -17,31 +17,31 @@ struct Res {
 };
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_has_value),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_has_value>,
                                    const Res<T>& r) noexcept {
   return r.data.index() == 0;
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_value),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_get_value>,
                                    const Res<T>& r) noexcept {
   return std::get<0>(r.data);
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_value),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_get_value>,
                                    Res<T>& r) noexcept {
   return std::get<0>(r.data);
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_error),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_get_error>,
                                    const Res<T>& r) noexcept {
   return std::get<1>(r.data);
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_error),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_get_error>,
                                    Res<T>& r) noexcept {
   return std::get<1>(r.data);
 }
@@ -70,7 +70,7 @@ struct eh final {
 };
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_factory),
+constexpr decltype(auto) customize(cordo::hook_t<cordo::fallible_get_factory>,
                                    const Res<T>&) noexcept {
   return eh{};
 }

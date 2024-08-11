@@ -10,8 +10,10 @@
 #endif
 
 #include "cordo/impl/core/algo.hh"
+#include "cordo/impl/core/invoke.hh"
 #include "cordo/impl/core/pipe.hh"
 
+namespace cordo {
 namespace mirror_internal_result {
 
 enum class mirror_error : uint32_t {
@@ -110,35 +112,35 @@ struct eh_result final {
 };
 
 template <typename T>
-constexpr auto customize(decltype(cordo::fallible_get_factory),
+constexpr auto customize(hook_t<cordo::fallible_get_factory>,
                          const mirror_result<T>& r) noexcept {
   return eh_result{};
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_has_value),
+constexpr decltype(auto) customize(hook_t<cordo::fallible_has_value>,
                                    const mirror_result<T>& r) noexcept {
   return r.ok();
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_value),
+constexpr decltype(auto) customize(hook_t<cordo::fallible_get_value>,
                                    const mirror_result<T>& r) noexcept {
   return r.value();
 }
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_value),
+constexpr decltype(auto) customize(hook_t<cordo::fallible_get_value>,
                                    mirror_result<T>& r) noexcept {
   return r.value();
 }
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_value),
+constexpr decltype(auto) customize(hook_t<cordo::fallible_get_value>,
                                    mirror_result<T>&& r) noexcept {
   return std::move(r).value();
 }
 
 template <typename T>
-constexpr decltype(auto) customize(decltype(cordo::fallible_get_error),
+constexpr decltype(auto) customize(hook_t<cordo::fallible_get_error>,
                                    const mirror_result<T>& r) noexcept {
   return r.error();
 }
@@ -147,7 +149,6 @@ static_assert(cordo::fallible<mirror_result<int>>);
 
 }  // namespace mirror_internal_result
 
-namespace cordo {
 using mirror_internal_result::eh_result;
 using mirror_internal_result::eh_terminate;
 using mirror_internal_result::mirror_error;

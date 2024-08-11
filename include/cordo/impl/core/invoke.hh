@@ -2,6 +2,7 @@
 
 #include <type_traits>
 
+#include "cordo/impl/core/cpo.hh"
 #include "cordo/impl/core/macros.hh"
 #include "cordo/impl/core/meta.hh"
 
@@ -23,7 +24,10 @@ struct invoke_fn final {
   template <typename A, typename... Args>
   constexpr auto resolve(::cordo::overload_prio_t<1>, A &&a,
                          Args &&...args) const
-      CORDO_INTERNAL_ALIAS_(std::invoke((A &&)a, (Args &&)args...));
+      noexcept(noexcept(cpo_invoke((A &&)a, (Args &&)args...)))
+          -> decltype(cpo_invoke((A &&)a, (Args &&)args...)) {
+    return cpo_invoke((A &&)a, (Args &&)args...);
+  }
 
  public:
   template <typename A, typename... Args>
