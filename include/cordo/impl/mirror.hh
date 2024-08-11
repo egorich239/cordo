@@ -139,8 +139,9 @@ inline constexpr ::cordo::algo_t<mirror_assign_t{}> mirror_assign;
 inline constexpr ::cordo::algo_t<mirror_subscript_key_core_t{}>
     mirror_subscript_key;
 
-inline constexpr ::cordo::algo_t<mirror_has_value_core_t{}> mirror_has_value;
-inline constexpr ::cordo::algo_t<mirror_unwrap_core_t{}> mirror_unwrap;
+inline constexpr ::cordo::algo_t<cpo_t<mirror_has_value_core_t{}>{}>
+    mirror_has_value;
+inline constexpr ::cordo::algo_t<cpo_t<mirror_unwrap_core_t{}>{}> mirror_unwrap;
 
 struct make_mirror_impl_fn final {
   template <typename..., mirror_traits Traits, typename EH>

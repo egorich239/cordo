@@ -10,6 +10,7 @@
 
 #include "cordo/impl/core/algo.hh"
 #include "cordo/impl/core/cstring.hh"
+#include "cordo/impl/core/hook.hh"
 #include "cordo/impl/core/kv.hh"
 #include "cordo/impl/core/meta.hh"
 #include "cordo/impl/core/pipe.hh"
@@ -28,14 +29,15 @@ struct mirror_option_traits final {
 };
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_has_value_core_t,
+constexpr auto customize(hook_t<mirror_has_value>,
                          mirror_option_traits<T, I, Rep>, auto&& core)
-    CORDO_INTERNAL_ALIAS_(static_cast<bool>(core.value));
+    CORDO_INTERNAL_RETURN_(static_cast<bool>(core.value));
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_unwrap_core_t,
-                         mirror_option_traits<T, I, Rep> t, auto&& core)
-    CORDO_INTERNAL_ALIAS_(
+constexpr decltype(auto) customize(hook_t<mirror_unwrap>,
+                                   mirror_option_traits<T, I, Rep> t,
+                                   auto&& core)
+    CORDO_INTERNAL_RETURN_(
         mirror_has_value(t, core)
             ? (core |
                cordo::piped(make_mirror_impl, *((decltype(core)&&)core).value) |
@@ -44,17 +46,19 @@ constexpr auto customize(mirror_unwrap_core_t,
                                    ::cordo::mirror_error::INVALID_UNWRAP)));
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_traits_subscript_keys_core_t, const auto& rec,
+constexpr auto customize(mirror_traits_subscript_keys_core_t,
                          mirror_option_traits<T, I, Rep> t)
-    CORDO_INTERNAL_ALIAS_(rec(mirror_traits_ctor(::cordo::tag_t<I>{})));
+    CORDO_INTERNAL_ALIAS_(
+        mirror_traits_subscript_keys(mirror_traits_ctor(::cordo::tag_t<I>{})));
 
 template <typename T, typename I, typename Rep, auto K>
-constexpr decltype(auto) customize(mirror_subscript_key_core_t, const auto& rec,
+constexpr decltype(auto) customize(mirror_subscript_key_core_t,
                                    mirror_option_traits<T, I, Rep>, auto&& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(mirror_impl_apply((decltype(core)&&)core,
                                              mirror_unwrap) |
-                           cordo::piped(mirror_impl_apply, rec, k));
+                           cordo::piped(mirror_impl_apply, mirror_subscript_key,
+                                        k));
 
 template <typename T>
 constexpr auto customize(mirror_traits_ctor_core_t,
