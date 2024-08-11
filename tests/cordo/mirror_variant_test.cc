@@ -25,15 +25,15 @@ using Var = std::variant<Foo, Bar>;
 using Var_m =
     cordo::mirror_variant_traits<Var, ::cordo::values_t<"Foo"_key, "Bar"_key>>;
 
-constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+constexpr auto customize(cordo::hook_t<::cordo::mirror_traits_ctor>,
                          ::cordo::tag_t<Foo> v) noexcept {
   return cordo::mirror_struct_traits<Foo, Foo_map>{};
 }
-constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+constexpr auto customize(cordo::hook_t<::cordo::mirror_traits_ctor>,
                          ::cordo::tag_t<Bar> v) noexcept {
   return cordo::mirror_struct_traits<Bar, Bar_map>{};
 }
-constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+constexpr auto customize(cordo::hook_t<::cordo::mirror_traits_ctor>,
                          ::cordo::tag_t<Var> v) noexcept {
   return Var_m{};
 }

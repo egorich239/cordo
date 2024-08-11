@@ -70,13 +70,13 @@ static_assert(std::is_same_v<typename mirror_primitive_traits<int>::name,
                              cordo::make_key<::cordo::cstring("i32")>>);
 
 template <primitive T>
-constexpr auto customize(mirror_traits_ctor_core_t,
+constexpr auto customize(hook_t<mirror_traits_ctor>,
                          ::cordo::tag_t<T>) noexcept {
   return mirror_primitive_traits<T>{};
 }
 
 template <primitive T>
-constexpr auto customize(mirror_traits_of_const_core_t,
+constexpr auto customize(hook_t<mirror_traits_of_const>,
                          mirror_primitive_traits<T>) noexcept {
   return mirror_primitive_traits<const T>{};
 }

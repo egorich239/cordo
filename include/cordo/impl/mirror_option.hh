@@ -46,13 +46,13 @@ constexpr decltype(auto) customize(hook_t<mirror_unwrap>,
                                    ::cordo::mirror_error::INVALID_UNWRAP)));
 
 template <typename T, typename I, typename Rep>
-constexpr auto customize(mirror_traits_subscript_keys_core_t,
+constexpr auto customize(hook_t<mirror_traits_subscript_keys>,
                          mirror_option_traits<T, I, Rep> t)
-    CORDO_INTERNAL_ALIAS_(
+    CORDO_INTERNAL_RETURN_(
         mirror_traits_subscript_keys(mirror_traits_ctor(::cordo::tag_t<I>{})));
 
 template <typename T, typename I, typename Rep, auto K>
-constexpr decltype(auto) customize(mirror_subscript_key_core_t,
+constexpr decltype(auto) customize(hook_t<mirror_subscript_key>,
                                    mirror_option_traits<T, I, Rep>, auto&& core,
                                    ::cordo::key_t<K> k)
     CORDO_INTERNAL_RETURN_(mirror_impl_apply((decltype(core)&&)core,
@@ -61,19 +61,19 @@ constexpr decltype(auto) customize(mirror_subscript_key_core_t,
                                         k));
 
 template <typename T>
-constexpr auto customize(mirror_traits_ctor_core_t,
+constexpr auto customize(hook_t<mirror_traits_ctor>,
                          ::cordo::tag_t<std::unique_ptr<T>>) noexcept {
   return mirror_option_traits<std::unique_ptr<T>, T&>{};
 }
 
 template <typename T>
-constexpr auto customize(mirror_traits_ctor_core_t,
+constexpr auto customize(hook_t<mirror_traits_ctor>,
                          ::cordo::tag_t<std::optional<T>>) noexcept {
   return mirror_option_traits<std::optional<T>, T&>{};
 }
 
 template <typename T, typename I>
-constexpr auto customize(mirror_traits_of_const_core_t,
+constexpr auto customize(hook_t<mirror_traits_of_const>,
                          mirror_option_traits<T, I, T&>) noexcept {
   return mirror_option_traits<const T, const I, const T&>{};
 }

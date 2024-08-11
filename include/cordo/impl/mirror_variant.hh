@@ -105,13 +105,13 @@ struct mirror_variant_option final {
 
 // mirror_variant
 template <typename T, typename Options>
-constexpr auto customize(mirror_traits_of_const_core_t,
+constexpr auto customize(hook_t<mirror_traits_of_const>,
                          mirror_variant_traits<T, Options>) noexcept {
   return mirror_variant_traits<const T, Options>{};
 }
 
 template <typename T, typename Options, auto K>
-constexpr decltype(auto) customize(mirror_subscript_key_core_t,
+constexpr decltype(auto) customize(hook_t<mirror_subscript_key>,
                                    mirror_variant_traits<T, Options>,
                                    auto&& core, ::cordo::key_t<K> k) noexcept {
   using traits = decltype(core.traits());
@@ -126,7 +126,7 @@ constexpr decltype(auto) customize(mirror_subscript_key_core_t,
 // mirror_variant_option
 template <typename Traits, typename F, size_t I>
 constexpr auto customize(
-    mirror_traits_ctor_core_t,
+    hook_t<mirror_traits_ctor>,
     ::cordo::tag_t<mirror_variant_option<Traits, F, I>&&>) noexcept {
   using Opt = mirror_variant_option<Traits, F, I>;
   return mirror_option_traits<Opt, F, Opt>{};
@@ -134,7 +134,7 @@ constexpr auto customize(
 
 template <typename..., typename Traits, typename F, size_t I,
           typename Opt = mirror_variant_option<Traits, F, I>>
-constexpr auto customize(mirror_traits_of_const_core_t, const auto&,
+constexpr auto customize(hook_t<mirror_traits_of_const>,
                          mirror_option_traits<Opt, F, Opt>) noexcept {
   using OptC = mirror_variant_option<Traits, const F, I>;
   return mirror_option_traits<OptC, const F, OptC>{};
@@ -142,10 +142,11 @@ constexpr auto customize(mirror_traits_of_const_core_t, const auto&,
 
 template <typename Traits, typename F, size_t I>
 constexpr auto customize(
-    mirror_traits_subscript_keys_core_t, const auto& rec,
+    hook_t<mirror_traits_subscript_keys>,
     mirror_option_traits<mirror_variant_option<Traits, F, I>, F,
                          mirror_variant_option<Traits, F, I>>) noexcept {
-  return rec(typename decltype(::cordo::mirror(std::declval<F>()))::traits{});
+  return mirror_traits_subscript_keys(
+      typename decltype(::cordo::mirror(std::declval<F>()))::traits{});
 }
 
 // std::variant

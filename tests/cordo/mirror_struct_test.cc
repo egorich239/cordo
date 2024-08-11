@@ -20,7 +20,7 @@ using SomeStruct_map = ::cordo::values_t<  //
     ("y"_key <= &SomeStruct::y),           //
     ("z"_key <= &SomeStruct::z)>;
 
-constexpr auto customize(decltype(::cordo::mirror_traits_ctor),
+constexpr auto customize(cordo::hook_t<::cordo::mirror_traits_ctor>,
                          ::cordo::tag_t<SomeStruct>) noexcept {
   return cordo::mirror_struct_traits<SomeStruct, SomeStruct_map>{};
 }
@@ -80,7 +80,7 @@ TEST(MirrorStruct, Mut) {
 
   cordo::mirror_t mf = ::cordo::mirror(f);
   static_assert(cordo::mirror_struct<decltype(mf)>);
-  
+
   EXPECT_THAT(mf.v(), ::testing::Ref(f));
 
   EXPECT_THAT(mf["x"_key].v(), ::testing::Ref(f.x));

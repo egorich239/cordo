@@ -110,5 +110,7 @@ struct cpo_invoke_fn final {
 
 using cordo_internal_cpo::cpo;
 using cordo_internal_cpo::cpo_t;
+template <auto V, typename... AdlHooks>
+inline constexpr cpo_t<V, AdlHooks...> cpo_v;
 inline constexpr cordo_internal_cpo::cpo_invoke_fn cpo_invoke{};
 }  // namespace cordo
