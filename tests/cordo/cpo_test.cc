@@ -19,6 +19,13 @@ constexpr int sum(int x, int y) { return x + y; }
 inline constexpr cordo::cpo_t<sum> sum_algo{};
 inline constexpr cordo::cpo_t<sum, n1::adl_tag> sum_algo_n1{};
 inline constexpr cordo::cpo_t<sum, n2::adl_tag, n1::adl_tag> sum_algo_n2n1{};
+
+struct Def final {};
+inline constexpr cordo::cpo_t<Def{}> def_algo{};
+
+int customize(cordo::hook_t<def_algo>) {
+  return 42;
+}
 }  // namespace n3
 
 namespace n4 {
@@ -70,6 +77,10 @@ TEST(Sum, WithN2N1) {
   EXPECT_THAT(foo.x, -7);
   std::string res = cordo::cpo_invoke(n3::sum_algo_n2n1, "lorem", "ipsum");
   EXPECT_THAT(res, testing::StrEq("lorem ipsum"));
+}
+
+TEST(Def, JustSimple) {
+  EXPECT_THAT(cordo::cpo_invoke(n3::def_algo), 42);
 }
 
 }  // namespace

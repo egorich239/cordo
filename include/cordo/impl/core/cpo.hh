@@ -13,6 +13,7 @@ namespace cordo_internal_cpo {
 // - for AdlHook in AdlHooks:
 //     // shall be installed in the namespace of AdlHook type.
 //     customize(cpo_t<Algo, AdlHook>, args...)
+// - customize(cpo_t<Algo, decltype(Algo)>, args...)
 // - Algo(args...)
 //
 // If any of the customize is missing, they are omitted.
@@ -29,14 +30,14 @@ concept cpo = requires(T&& v) {
 struct cpo_invoke_impl final {
  private:
   template <typename... Args, std::invocable<Args&&...> Fn>
-  constexpr auto apply(cordo::overload_prio_t<4>, Fn&& fn, Args&&... args) const
+  constexpr auto apply(cordo::overload_prio_t<5>, Fn&& fn, Args&&... args) const
       noexcept(std::is_nothrow_invocable_v<Fn&&, Args&&...>)
           -> std::invoke_result_t<Fn&&, Args&&...> {
     return std::invoke((Fn&&)fn, (Args&&)args...);
   }
 
   template <typename... Args, auto Algo, typename... AdlHooks>
-  constexpr auto apply(cordo::overload_prio_t<4>, cpo_t<Algo, AdlHooks...>,
+  constexpr auto apply(cordo::overload_prio_t<5>, cpo_t<Algo, AdlHooks...>,
                        Args&&... args) const
       noexcept(noexcept(customize(cpo_t<Algo>{}, (Args&&)args...)))
           -> decltype(customize(cpo_t<Algo>{}, (Args&&)args...)) {
@@ -44,7 +45,7 @@ struct cpo_invoke_impl final {
   }
 
   template <auto Algo, typename AdlHook, typename... AdlHooks, typename... Args>
-  constexpr auto apply(cordo::overload_prio_t<3>,
+  constexpr auto apply(cordo::overload_prio_t<4>,
                        cpo_t<Algo, AdlHook, AdlHooks...>, Args&&... args) const
       noexcept(noexcept(customize(cpo_t<Algo, AdlHook>{}, (Args&&)args...)))
           -> decltype(customize(cpo_t<Algo, AdlHook>{}, (Args&&)args...)) {
@@ -52,16 +53,27 @@ struct cpo_invoke_impl final {
   }
 
   template <auto Algo, typename AdlHook, typename... AdlHooks, typename... Args>
-  constexpr auto apply(cordo::overload_prio_t<2>,
+  constexpr auto apply(cordo::overload_prio_t<3>,
                        cpo_t<Algo, AdlHook, AdlHooks...>, Args&&... args) const
-      noexcept(noexcept(this->apply(cordo::overload_prio_t<3>{},
+      noexcept(noexcept(this->apply(cordo::overload_prio_t<4>{},
                                     cpo_t<Algo, AdlHooks...>{},
                                     (Args&&)args...)))
-          -> decltype(this->apply(cordo::overload_prio_t<3>{},
+          -> decltype(this->apply(cordo::overload_prio_t<4>{},
                                   cpo_t<Algo, AdlHooks...>{},
                                   (Args&&)args...)) {
-    return this->apply(cordo::overload_prio_t<3>{}, cpo_t<Algo, AdlHooks...>{},
+    return this->apply(cordo::overload_prio_t<4>{}, cpo_t<Algo, AdlHooks...>{},
                        (Args&&)args...);
+  }
+
+  template <auto Algo, typename... AdlHooks, typename... Args,
+            typename AlgoT = std::remove_cvref_t<decltype(Algo)>>
+  constexpr auto apply(cordo::overload_prio_t<2>, cpo_t<Algo, AdlHooks...>,
+                       Args&&... args) const
+      noexcept(noexcept(customize(cpo_t<Algo, AlgoT>{}, (Args&&)args...)))
+          -> decltype(customize(cpo_t<Algo, AlgoT>{}, (Args&&)args...))
+    requires(std::is_class_v<AlgoT>)
+  {
+    return customize(cpo_t<Algo, AlgoT>{}, (Args&&)args...);
   }
 
   template <auto Algo, typename... AdlHooks, typename... Args>
@@ -72,23 +84,14 @@ struct cpo_invoke_impl final {
     return std::invoke(Algo, (Args&&)args...);
   }
 
-  template <typename..., typename Fn, typename... Args>
-  constexpr auto invoke(Fn&& fn, Args&&... args) const
-      noexcept(noexcept(this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn,
-                                    (Args&&)args...)))
-          -> decltype(this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn,
-                                  (Args&&)args...)) {
-    return this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn, (Args&&)args...);
-  }
-
  public:
   template <typename..., typename Fn, typename... Args>
   constexpr auto operator()(Fn&& fn, Args&&... args) const
-      noexcept(noexcept(this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn,
+      noexcept(noexcept(this->apply(cordo::overload_prio_t<5>{}, (Fn&&)fn,
                                     (Args&&)args...)))
-          -> decltype(this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn,
+          -> decltype(this->apply(cordo::overload_prio_t<5>{}, (Fn&&)fn,
                                   (Args&&)args...)) {
-    return this->apply(cordo::overload_prio_t<4>{}, (Fn&&)fn, (Args&&)args...);
+    return this->apply(cordo::overload_prio_t<5>{}, (Fn&&)fn, (Args&&)args...);
   }
 };
 
