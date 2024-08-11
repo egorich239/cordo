@@ -11,7 +11,7 @@ namespace cordo_internal_invoke {
 struct invoke_fn final {
  private:
   template <typename A, typename... Args>
-  constexpr auto resolve(::cordo::overload_prio_t<3>, A &&a,
+  constexpr auto resolve(::cordo::overload_prio_t<2>, A &&a,
                          Args &&...args) const
       noexcept(noexcept(customize((A &&)a, (Args &&)args...)))
           -> decltype(customize((A &&)a, (Args &&)args...))
